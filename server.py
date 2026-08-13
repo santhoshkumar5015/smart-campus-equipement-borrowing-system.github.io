@@ -11,8 +11,15 @@ import datetime
 import urllib.parse
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "smart_campus.db")
-STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_DIR = os.path.abspath(os.path.join(BASE_DIR, "static"))
+DB_PATH = os.path.abspath(os.path.join(BASE_DIR, "smart_campus.db"))
+
+try:
+    with open(DB_PATH, "a"): pass
+except Exception:
+    DB_PATH = "/tmp/smart_campus.db"
+
 DEFAULT_PORTS = [8080, 8000, 5000, 8888, 3000]
 
 MAX_ACTIVE_BORROWINGS = 2  # BR-05
@@ -173,24 +180,27 @@ class SmartCampusRequestHandler(BaseHTTPRequestHandler):
             self.handle_static_file(path)
 
     def handle_static_file(self, path):
-        if path == "/" or path == "":
-            path = "/index.html"
+        clean_path = path.split("?")[0].split("#")[0]
+        if clean_path in ("/", "", "/index", "/index.html"):
+            rel_file = "index.html"
+        else:
+            rel_file = clean_path.lstrip("/")
 
-        file_path = os.path.join(STATIC_DIR, path.lstrip("/"))
+        file_path = os.path.abspath(os.path.join(STATIC_DIR, rel_file))
         if not os.path.exists(file_path) or os.path.isdir(file_path):
             file_path = os.path.join(STATIC_DIR, "index.html")
 
         ext = os.path.splitext(file_path)[1].lower()
         mime_types = {
-            ".html": "text/html",
-            ".css": "text/css",
-            ".js": "application/javascript",
+            ".html": "text/html; charset=utf-8",
+            ".css": "text/css; charset=utf-8",
+            ".js": "application/javascript; charset=utf-8",
             ".json": "application/json",
             ".png": "image/png",
             ".jpg": "image/jpeg",
             ".svg": "image/svg+xml"
         }
-        content_type = mime_types.get(ext, "application/octet-stream")
+        content_type = mime_types.get(ext, "text/html; charset=utf-8")
 
         try:
             with open(file_path, "rb") as f:
@@ -202,6 +212,7 @@ class SmartCampusRequestHandler(BaseHTTPRequestHandler):
             self.wfile.write(content)
         except Exception:
             self.send_response(404)
+            self.send_header("Content-Type", "text/plain")
             self.end_headers()
             self.wfile.write(b"404 Not Found")
 
