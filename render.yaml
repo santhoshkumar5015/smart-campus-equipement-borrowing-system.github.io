@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: smart-campus-equipment
+    env: python
+    buildCommand: ""
+    startCommand: python3 server.py
+    autoDeploy: true

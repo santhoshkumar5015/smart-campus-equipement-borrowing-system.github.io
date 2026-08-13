@@ -1,0 +1,2 @@
+# Smart Campus Equipment Borrowing System Dependencies
+# Note: Core system uses Python 3 standard library (zero external dependencies required for production)
