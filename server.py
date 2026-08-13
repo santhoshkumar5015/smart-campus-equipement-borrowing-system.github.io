@@ -188,6 +188,8 @@ class SmartCampusRequestHandler(BaseHTTPRequestHandler):
 
         file_path = os.path.abspath(os.path.join(STATIC_DIR, rel_file))
         if not os.path.exists(file_path) or os.path.isdir(file_path):
+            file_path = os.path.abspath(os.path.join(BASE_DIR, rel_file))
+        if not os.path.exists(file_path) or os.path.isdir(file_path):
             file_path = os.path.join(STATIC_DIR, "index.html")
 
         ext = os.path.splitext(file_path)[1].lower()
