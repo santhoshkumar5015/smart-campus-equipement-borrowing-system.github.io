@@ -622,6 +622,38 @@
     </div>
   </div>
 
+  <!-- MODAL 7: EDIT BORROW DATES (1 MONTH EXTENSION) -->
+  <div class="modal-overlay" id="editDatesModal">
+    <div class="modal-content" style="max-width: 460px;">
+      <div class="modal-header">
+        <h3>Edit Borrow & Return Dates (Max 1 Month)</h3>
+        <button class="modal-close" onclick="closeModal('editDatesModal')">&times;</button>
+      </div>
+      <form id="editDatesForm">
+        <input type="hidden" id="editDatesReqId">
+        
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label>Borrow Start Date & Time</label>
+          <input type="datetime-local" id="editStartDate" required>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label>Expected Return Date & Time (Max 30 Days Limit)</label>
+          <input type="datetime-local" id="editEndDate" required>
+        </div>
+
+        <div style="font-size: 0.8rem; color: #60a5fa; margin-bottom: 1.25rem;">
+          <i data-lucide="info" style="width: 16px; height: 16px; vertical-align: middle;"></i> You can extend return dates up to 1 month (30 days max) from borrow start date.
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('editDatesModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary" style="width: auto;">Update Dates</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <div class="toast-container" id="toastContainer"></div>
 
   <script src="app.js"></script>

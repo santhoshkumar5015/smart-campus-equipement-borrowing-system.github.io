@@ -93,6 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupRejectForm();
   setupReturnForm();
   setupRegisterForm();
+  setupEditDatesForm();
 
   // Initial Data Fetch
   refreshAllData();
@@ -309,6 +310,28 @@ function handleLocalApi(url, options) {
       pickup_locker: eq.locker_id,
       message: initialStatus === 'PENDING' ? 'Borrow request submitted for Admin approval.' : 'Borrow request approved automatically!'
     };
+  }
+
+  // PUT /api/borrow-requests/:id/dates
+  if (path.includes('/dates') && method === 'PUT') {
+    const reqId = path.split('/')[3];
+    const req = db.borrow_requests.find(r => r.id === reqId);
+    if (req) {
+      const borrowDt = new Date(body.borrow_date);
+      const returnDt = new Date(body.expected_return_date);
+      if (returnDt <= borrowDt) return { error: 'BR-05: Expected return date must be strictly after borrow date.' };
+      if ((returnDt - borrowDt) / (1000 * 60 * 60 * 24) > 30) return { error: 'BR-05: Loan duration cannot exceed 1 month (30 days).' };
+
+      req.borrow_date = body.borrow_date;
+      req.expected_return_date = body.expected_return_date;
+
+      const loan = db.loans.find(l => l.request_id === reqId);
+      if (loan) loan.due_at = body.expected_return_date;
+
+      db.audit_logs.push({ log_id: db.audit_logs.length + 1, user_id: profile.id, action: 'EDIT_DATES', entity_type: 'BORROW_REQUEST', entity_id: reqId, timestamp: new Date().toLocaleString(), details: `Updated borrow dates for request ${reqId} (${body.borrow_date} to ${body.expected_return_date}). Return extended up to 1 month.` });
+      saveLocalDB(db);
+      return { success: true, message: 'Borrowing dates updated successfully! Return date extended up to 1 month.' };
+    }
   }
 
   // PUT /api/admin/requests/:id/approve
@@ -587,7 +610,7 @@ function renderEquipmentCatalog() {
               <span><i data-lucide="door-closed"></i> Locker ${item.locker_id}</span>
             </div>
             <div class="meta-row">
-              <span><i data-lucide="barcode"></i> SN: ${escapeHtml(item.serial_number)}</span>
+              <span><i data-lucide="indian-rupee"></i> Security Loan Value: ₹40,000</span>
               <span><i data-lucide="shield-check"></i> ${item.requires_approval ? 'Admin Approval' : 'Instant Loan'}</span>
             </div>
           </div>
@@ -674,6 +697,9 @@ function renderMyLoansTable() {
                 <i data-lucide="qr-code"></i> Pass
               </button>
             ` : ''}
+            <button class="btn btn-secondary" style="padding: 0.4rem 0.6rem; font-size: 0.78rem;" onclick="openEditDatesModal('${r.id}')">
+              <i data-lucide="calendar"></i> Edit Dates
+            </button>
           </div>
         </td>
       </tr>
@@ -859,6 +885,55 @@ async function approveReservation(reqId) {
   } else {
     showToast((json && json.error) || 'Failed to approve', 'error');
   }
+}
+
+function openEditDatesModal(reqId) {
+  const req = myReservations.find(r => r.id === reqId);
+  document.getElementById('editDatesReqId').value = reqId;
+  if (req) {
+    if (req.borrow_date) document.getElementById('editStartDate').value = req.borrow_date.replace(' ', 'T').slice(0, 16);
+    if (req.expected_return_date) document.getElementById('editEndDate').value = req.expected_return_date.replace(' ', 'T').slice(0, 16);
+  }
+  openModal('editDatesModal');
+}
+
+function setupEditDatesForm() {
+  const form = document.getElementById('editDatesForm');
+  if (!form) return;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const reqId = document.getElementById('editDatesReqId').value;
+    const borrowStr = document.getElementById('editStartDate').value.replace('T', ' ');
+    const returnStr = document.getElementById('editEndDate').value.replace('T', ' ');
+
+    const borrowDt = new Date(borrowStr);
+    const returnDt = new Date(returnStr);
+
+    if (returnDt <= borrowDt) {
+      showToast('BR-05: Expected return date must be strictly after borrow date.', 'error');
+      return;
+    }
+
+    if ((returnDt - borrowDt) / (1000 * 60 * 60 * 24) > 30) {
+      showToast('BR-05: Loan duration cannot exceed 1 month (30 days).', 'error');
+      return;
+    }
+
+    const json = await smartFetch(`${API_BASE}/borrow-requests/${reqId}/dates`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ borrow_date: borrowStr, expected_return_date: returnStr })
+    });
+
+    if (json && json.success) {
+      closeModal('editDatesModal');
+      showToast(json.message, 'success');
+      refreshAllData();
+    } else {
+      showToast((json && json.error) || 'Failed to update dates', 'error');
+    }
+  });
 }
 
 function openRejectModal(reqId) {

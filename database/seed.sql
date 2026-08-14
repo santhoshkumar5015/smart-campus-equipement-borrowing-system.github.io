@@ -49,25 +49,27 @@ INSERT INTO students (student_id, user_id, register_number, department, year, se
 ('S-10245', 'STU-10245', 'RA2311003050245', 'Mechatronics', 4, 7, 'A', '+91 9876543222'),
 ('S-10267', 'STU-10267', 'RA2311003050267', 'VLSI & Microelectronics', 1, 1, 'A', '+91 9876543223');
 
--- Seed Equipment Units
-INSERT INTO equipment (id, category_id, name, serial_number, description, specifications, location, condition, status, purchase_date, locker_id, requires_approval, image_icon, created_at, updated_at) VALUES
-(1, 1, 'MacBook Pro M3 Max 16"', 'SN-MBP-9021', 'High performance workstation laptop', 'Apple M3 Max 36GB RAM, 1TB SSD', 'CS Innovation Lab 201', 'EXCELLENT', 'AVAILABLE', '2025-06-10', 'A-01', 0, 'laptop', '2026-08-01 09:00:00', '2026-08-01 09:00:00'),
-(2, 2, 'Sony FX3 Cinema Camera Kit', 'SN-AV-4482', 'Full frame cinema camera for video shoots', 'Full-frame 4K, 24-70mm GM II lens, XLR handle', 'Media Studio B', 'GOOD', 'AVAILABLE', '2025-07-15', 'A-02', 1, 'camera', '2026-08-01 09:00:00', '2026-08-01 09:00:00'),
-(3, 3, 'Meta Quest 3 VR Headset (512GB)', 'SN-VR-8812', 'Standalone VR headset for spatial apps', 'Includes Touch Plus controllers & Link Cable', 'Spatial Computing Hub', 'EXCELLENT', 'AVAILABLE', '2025-08-20', 'A-03', 0, 'glasses', '2026-08-01 09:00:00', '2026-08-01 09:00:00'),
-(4, 4, 'DJI Mavic 3 Pro Cine Drone', 'SN-DRONE-304', 'Professional aerial filming drone', 'Tri-camera system, Apple ProRes, Smart Controller', 'Autonomous Systems Lab', 'EXCELLENT', 'AVAILABLE', '2025-09-01', 'A-04', 1, 'drone', '2026-08-01 09:00:00', '2026-08-01 09:00:00'),
-(5, 5, 'ESP32 IoT Development Starter Kit', 'SN-ESP32-001', 'Wi-Fi & Bluetooth IoT dev board bundle', 'ESP32 NodeMCU, OLED display, DHT11, Relays', 'IoT Hardware Lab 102', 'GOOD', 'AVAILABLE', '2025-10-05', 'A-05', 0, 'cpu', '2026-08-01 09:00:00', '2026-08-01 09:00:00'),
-(6, 6, 'Rigol 100MHz Digital Oscilloscope', 'SN-SCOPE-110', '4-Channel digital storage oscilloscope', '100MHz bandwidth, 1GSa/s sampling rate, Probes', 'Circuit Design Lab', 'GOOD', 'AVAILABLE', '2025-11-12', 'A-06', 0, 'activity', '2026-08-01 09:00:00', '2026-08-01 09:00:00'),
-(7, 1, 'iPad Pro 12.9 M2 + Pencil', 'SN-IPAD-551', 'Tablet for design & UI prototyping', '256GB Wi-Fi, Apple Pencil v2, Magic Keyboard', 'Design Innovation Studio', 'GOOD', 'BORROWED', '2025-12-01', 'B-01', 0, 'tablet', '2026-08-01 09:00:00', '2026-08-01 09:00:00'),
-(8, 2, 'Shure SM7B + Focusrite Podcasting Kit', 'SN-AUDIO-992', 'Broadcast quality voice recording bundle', 'Broadcast Mic, Cloudlifter CL-1, Scarlett 2i2', 'Podcast Studio 2', 'EXCELLENT', 'AVAILABLE', '2026-01-10', 'B-02', 0, 'mic', '2026-08-01 09:00:00', '2026-08-01 09:00:00'),
-(9, 4, 'TurtleBot 4 ROS 2 Mobile Robot', 'SN-BOT-004', 'ROS 2 autonomous navigation research platform', 'iRobot Create 3 base, OAK-D Pro camera, LiDAR', 'Mechatronics Lab', 'MINOR_DAMAGE', 'MAINTENANCE', '2026-02-14', 'B-03', 1, 'bot', '2026-08-01 09:00:00', '2026-08-01 09:00:00'),
-(10, 5, 'Raspberry Pi 5 Lab Starter Bundle', 'SN-RPI-505', 'Embedded Linux computing platform', '8GB RAM, NVMe Base, Touchscreen, Sensors', 'Embedded Systems Room', 'GOOD', 'AVAILABLE', '2026-03-01', 'B-04', 0, 'cpu', '2026-08-01 09:00:00', '2026-08-01 09:00:00');
+-- Seed Equipment Units (with ₹40,000 Security Loan Value)
+INSERT INTO equipment (id, category_id, name, serial_number, description, specifications, location, condition, status, purchase_date, equipment_value, locker_id, requires_approval, image_icon, created_at, updated_at) VALUES
+(1, 1, 'MacBook Pro M3 Max 16"', 'SN-MBP-9021', 'High performance workstation laptop', 'Apple M3 Max 36GB RAM, 1TB SSD', 'CS Innovation Lab 201', 'EXCELLENT', 'AVAILABLE', '2025-06-10', 40000, 'A-01', 0, 'laptop', '2026-08-01 09:00:00', '2026-08-01 09:00:00'),
+(2, 2, 'Sony FX3 Cinema Camera Kit', 'SN-AV-4482', 'Full frame cinema camera for video shoots', 'Full-frame 4K, 24-70mm GM II lens, XLR handle', 'Media Studio B', 'GOOD', 'AVAILABLE', '2025-07-15', 40000, 'A-02', 1, 'camera', '2026-08-01 09:00:00', '2026-08-01 09:00:00'),
+(3, 3, 'Meta Quest 3 VR Headset (512GB)', 'SN-VR-8812', 'Standalone VR headset for spatial apps', 'Includes Touch Plus controllers & Link Cable', 'Spatial Computing Hub', 'EXCELLENT', 'AVAILABLE', '2025-08-20', 40000, 'A-03', 0, 'glasses', '2026-08-01 09:00:00', '2026-08-01 09:00:00'),
+(4, 4, 'DJI Mavic 3 Pro Cine Drone', 'SN-DRONE-304', 'Professional aerial filming drone', 'Tri-camera system, Apple ProRes, Smart Controller', 'Autonomous Systems Lab', 'EXCELLENT', 'AVAILABLE', '2025-09-01', 40000, 'A-04', 1, 'drone', '2026-08-01 09:00:00', '2026-08-01 09:00:00'),
+(5, 5, 'ESP32 IoT Development Starter Kit', 'SN-ESP32-001', 'Wi-Fi & Bluetooth IoT dev board bundle', 'ESP32 NodeMCU, OLED display, DHT11, Relays', 'IoT Hardware Lab 102', 'GOOD', 'AVAILABLE', '2025-10-05', 40000, 'A-05', 0, 'cpu', '2026-08-01 09:00:00', '2026-08-01 09:00:00'),
+(6, 6, 'Rigol 100MHz Digital Oscilloscope', 'SN-SCOPE-110', '4-Channel digital storage oscilloscope', '100MHz bandwidth, 1GSa/s sampling rate, Probes', 'Circuit Design Lab', 'GOOD', 'AVAILABLE', '2025-11-12', 40000, 'A-06', 0, 'activity', '2026-08-01 09:00:00', '2026-08-01 09:00:00'),
+(7, 1, 'iPad Pro 12.9 M2 + Pencil', 'SN-IPAD-551', 'Tablet for design & UI prototyping', '256GB Wi-Fi, Apple Pencil v2, Magic Keyboard', 'Design Innovation Studio', 'GOOD', 'BORROWED', '2025-12-01', 40000, 'B-01', 0, 'tablet', '2026-08-01 09:00:00', '2026-08-01 09:00:00'),
+(8, 2, 'Shure SM7B + Focusrite Podcasting Kit', 'SN-AUDIO-992', 'Broadcast quality voice recording bundle', 'Broadcast Mic, Cloudlifter CL-1, Scarlett 2i2', 'Podcast Studio 2', 'EXCELLENT', 'AVAILABLE', '2026-01-10', 40000, 'B-02', 0, 'mic', '2026-08-01 09:00:00', '2026-08-01 09:00:00'),
+(9, 4, 'TurtleBot 4 ROS 2 Mobile Robot', 'SN-BOT-004', 'ROS 2 autonomous navigation research platform', 'iRobot Create 3 base, OAK-D Pro camera, LiDAR', 'Mechatronics Lab', 'MINOR_DAMAGE', 'MAINTENANCE', '2026-02-14', 40000, 'B-03', 1, 'bot', '2026-08-01 09:00:00', '2026-08-01 09:00:00'),
+(10, 5, 'Raspberry Pi 5 Lab Starter Bundle', 'SN-RPI-505', 'Embedded Linux computing platform', '8GB RAM, NVMe Base, Touchscreen, Sensors', 'Embedded Systems Room', 'GOOD', 'AVAILABLE', '2026-03-01', 40000, 'B-04', 0, 'cpu', '2026-08-01 09:00:00', '2026-08-01 09:00:00');
 
--- Seed Borrow Requests & Active Loans
+-- Seed Borrow Requests & Active Loans (₹40,000 Security Loan Value for half of the students, 1-Month Return Window)
 INSERT INTO borrow_requests (id, student_id, equipment_id, borrow_date, expected_return_date, purpose, status, approved_by, qr_code_token, pickup_locker, created_at, updated_at) VALUES
-('REQ-10492', 'STU-88210', 7, '2026-08-10 10:00', '2026-08-18 17:00', 'UI Capstone Prototyping Demo', 'APPROVED', 'ADM-00001', 'QR-REQ-10492-STU-88210', 'B-01', '2026-08-09 14:00:00', '2026-08-09 14:30:00');
+('REQ-30501', 'STU-3050371', 8, '2026-08-10 09:00', '2026-09-08 17:00', 'Final Year Capstone Project ML Model Training', 'APPROVED', 'ADM-00001', 'QR-REQ-30501-STU-3050371', 'B-02', '2026-08-09 10:00:00', '2026-08-09 10:30:00'),
+('REQ-10492', 'STU-88210', 7, '2026-08-10 10:00', '2026-09-09 17:00', 'UI Capstone Prototyping Demo', 'APPROVED', 'ADM-00001', 'QR-REQ-10492-STU-88210', 'B-01', '2026-08-09 14:00:00', '2026-08-09 14:30:00');
 
 INSERT INTO loans (loan_id, request_id, student_id, equipment_id, issued_at, due_at, status, issued_by) VALUES
-('LOAN-9901', 'REQ-10492', 'STU-88210', 7, '2026-08-10 10:15:00', '2026-08-18 17:00:00', 'ACTIVE', 'ADM-00001');
+('LOAN-30501', 'REQ-30501', 'STU-3050371', 8, '2026-08-10 09:15:00', '2026-09-08 17:00:00', 'ACTIVE', 'ADM-00001'),
+('LOAN-9901', 'REQ-10492', 'STU-88210', 7, '2026-08-10 10:15:00', '2026-09-09 17:00:00', 'ACTIVE', 'ADM-00001');
 
 -- Seed Maintenance Item
 INSERT INTO maintenance (equipment_id, issue, reported_at, reported_by, status, resolution) VALUES

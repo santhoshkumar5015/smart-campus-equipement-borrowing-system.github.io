@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS equipment (
     condition TEXT DEFAULT 'GOOD', -- 'EXCELLENT', 'GOOD', 'MINOR_DAMAGE', 'MAJOR_DAMAGE', 'MISSING_PARTS'
     status TEXT DEFAULT 'AVAILABLE', -- 'AVAILABLE', 'RESERVED', 'BORROWED', 'MAINTENANCE', 'RETIRED'
     purchase_date TEXT,
+    equipment_value INTEGER DEFAULT 40000, -- ₹40,000 Equipment Security Valuation
     locker_id TEXT NOT NULL,
     requires_approval INTEGER DEFAULT 0,
     image_icon TEXT DEFAULT 'box',

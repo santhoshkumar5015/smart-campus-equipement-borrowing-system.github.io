@@ -561,10 +561,15 @@ class SmartCampusRequestHandler(BaseHTTPRequestHandler):
                 self.send_json_response({"error": "BR-04: Borrow date cannot be in the past."}, 400)
                 return
 
-            # BR-05: Return date after borrow date
+            # BR-05: Return date after borrow date & Max 1 Month (30 Days)
             if return_dt <= borrow_dt:
                 conn.close()
                 self.send_json_response({"error": "BR-05: Expected return date must be strictly after borrow date."}, 400)
+                return
+
+            if (return_dt - borrow_dt).days > 30:
+                conn.close()
+                self.send_json_response({"error": "BR-05: Loan duration cannot exceed 1 month (30 days)."}, 400)
                 return
 
             # BR-07: Overdue student check
@@ -884,6 +889,47 @@ class SmartCampusRequestHandler(BaseHTTPRequestHandler):
             conn.commit()
             conn.close()
             self.send_json_response({"success": True, "message": log_details})
+
+        # Edit Request / Loan Dates (BR-05 Max 30 Days / 1 Month)
+        elif path.startswith("/api/borrow-requests/") and path.endswith("/dates"):
+            req_id = path.split("/")[3]
+            borrow_str = body.get("borrow_date")
+            return_str = body.get("expected_return_date") or body.get("return_date")
+
+            if not borrow_str or not return_str:
+                conn.close()
+                self.send_json_response({"error": "Borrow date and expected return date are required."}, 400)
+                return
+
+            try:
+                borrow_dt = datetime.datetime.strptime(borrow_str.replace("T", " ")[:16], "%Y-%m-%d %H:%M")
+                return_dt = datetime.datetime.strptime(return_str.replace("T", " ")[:16], "%Y-%m-%d %H:%M")
+            except ValueError:
+                conn.close()
+                self.send_json_response({"error": "Invalid date format"}, 400)
+                return
+
+            if return_dt <= borrow_dt:
+                conn.close()
+                self.send_json_response({"error": "BR-05: Expected return date must be strictly after borrow date."}, 400)
+                return
+
+            if (return_dt - borrow_dt).days > 30:
+                conn.close()
+                self.send_json_response({"error": "BR-05: Loan duration cannot exceed 1 month (30 days)."}, 400)
+                return
+
+            cursor.execute("UPDATE borrow_requests SET borrow_date = ?, expected_return_date = ?, updated_at = ? WHERE id = ?", (borrow_str.replace("T", " "), return_str.replace("T", " "), now_str, req_id))
+            cursor.execute("UPDATE loans SET due_at = ? WHERE request_id = ?", (return_str.replace("T", " "), req_id))
+
+            cursor.execute("""
+            INSERT INTO audit_logs (user_id, action, entity_type, entity_id, timestamp, details)
+            VALUES (?, 'EDIT_DATES', 'BORROW_REQUEST', ?, ?, ?)
+            """, (auth_user_id, req_id, now_str, f"Updated dates for request {req_id} ({borrow_str} to {return_str})"))
+
+            conn.commit()
+            conn.close()
+            self.send_json_response({"success": True, "message": "Borrowing dates updated successfully! Return date extended up to 1 month."})
 
         # Admin Maintenance Pipeline Update
         elif path.startswith("/api/admin/maintenance/") and (path.endswith("/progress") or path.endswith("/complete")):
