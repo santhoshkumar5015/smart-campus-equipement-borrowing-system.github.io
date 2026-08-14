@@ -62,6 +62,9 @@
         </select>
       </div>
 
+      <!-- Dynamic Student Loan Button Header Container -->
+      <div id="studentLoanHeaderBtnContainer" style="display: flex; align-items: center;"></div>
+
       <div class="user-badge" id="userBadgeDisplay">
         <div class="user-avatar" id="userAvatarText">SK</div>
         <div>
@@ -92,11 +95,12 @@
         </div>
       </div>
 
-      <div class="metric-card">
+      <!-- CLICKABLE Active Loans Stat Card -->
+      <div class="metric-card" id="activeLoansMetricCard" onclick="openActiveLoansModal()" style="cursor: pointer; border: 1px solid rgba(167, 139, 250, 0.4);" title="Click to view all Active Student Loans">
         <div class="metric-icon purple"><i data-lucide="clock"></i></div>
         <div class="metric-data">
           <h3 id="metricBorrowed">--</h3>
-          <p>Active Loans</p>
+          <p>Active Loans <span style="font-size: 0.7rem; color: #a78bfa; font-weight: 600;">(Click to view)</span></p>
         </div>
       </div>
 
@@ -651,6 +655,154 @@
           <button type="submit" class="btn btn-primary" style="width: auto;">Update Dates</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- MODAL 8: ACTIVE STUDENT LOAN DETAILS MODAL (FOR PRE-APPROVED 40,000 RS STUDENTS) -->
+  <div class="modal-overlay" id="studentLoanModal">
+    <div class="modal-content" style="max-width: 520px; background: linear-gradient(145deg, #0f172a, #1e293b); border: 1px solid rgba(16, 185, 129, 0.4); box-shadow: 0 0 30px rgba(16, 185, 129, 0.2);">
+      <div class="modal-header" style="border-bottom: 1px solid rgba(16, 185, 129, 0.3);">
+        <h3 style="color: #34d399; display: flex; align-items: center; gap: 0.5rem;">
+          <i data-lucide="credit-card"></i> Student Equipment Loan Certificate
+        </h3>
+        <button class="modal-close" onclick="closeModal('studentLoanModal')">&times;</button>
+      </div>
+
+      <div style="padding: 1.25rem 0;">
+        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 1.25rem; text-align: center; margin-bottom: 1.25rem;">
+          <div style="font-size: 0.85rem; color: #a7f3d0; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Approved Equipment Loan Limit</div>
+          <div style="font-size: 2.75rem; font-weight: 800; color: #34d399; margin: 0.4rem 0;">₹40,000</div>
+          <span style="background: #059669; color: white; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.78rem; font-weight: 700; display: inline-block;">● APPROVED & ACTIVE</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; font-size: 0.85rem;">
+          <div style="background: rgba(255,255,255,0.03); padding: 0.8rem; border-radius: 8px; border: 1px solid var(--border-color);">
+            <div style="color: var(--text-muted); font-size: 0.75rem;">Student Name</div>
+            <div style="font-weight: 700; color: white; margin-top: 0.25rem;" id="modalLoanStudentName">Santhosh Kumar S</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); padding: 0.8rem; border-radius: 8px; border: 1px solid var(--border-color);">
+            <div style="color: var(--text-muted); font-size: 0.75rem;">Register Number</div>
+            <div style="font-weight: 700; color: #60a5fa; margin-top: 0.25rem;" id="modalLoanRegNo">RA2311003050371</div>
+          </div>
+        </div>
+
+        <div style="background: rgba(15, 23, 42, 0.6); padding: 1rem; border-radius: 10px; border: 1px solid var(--border-color); font-size: 0.85rem; color: #cbd5e1; margin-bottom: 1.25rem;">
+          <div style="font-weight: 700; color: white; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
+            <i data-lucide="shield-check" style="color: #34d399;"></i> Student Borrowing Benefits:
+          </div>
+          <ul style="padding-left: 1.25rem; margin: 0; line-height: 1.6; color: #94a3b8;">
+            <li>Pre-Approved ₹40,000 Credit for borrowing High-Value Lab Equipment</li>
+            <li>Instant Check-Out privilege for DSLRs, Laptops, Oscilloscopes</li>
+            <li>0% Interest College Sponsored Equipment Loan Grant</li>
+            <li>Duration: Flexible borrowing up to 30 Days (1 Month)</li>
+          </ul>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('studentLoanModal')">Close</button>
+          <button type="button" class="btn btn-primary" onclick="closeModal('studentLoanModal'); switchTab('loans');" style="width: auto; background: linear-gradient(135deg, #10b981, #059669);">
+            <i data-lucide="list"></i> View My Active Loans
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 9: BUY / ACTIVATE EQUIPMENT LOAN MODAL (FOR OTHER STUDENTS - UP TO 50,000 RS) -->
+  <div class="modal-overlay" id="buyLoanModal">
+    <div class="modal-content" style="max-width: 520px; background: linear-gradient(145deg, #0f172a, #1e1b4b); border: 1px solid rgba(139, 92, 246, 0.4); box-shadow: 0 0 30px rgba(139, 92, 246, 0.25);">
+      <div class="modal-header" style="border-bottom: 1px solid rgba(139, 92, 246, 0.3);">
+        <h3 style="color: #c084fc; display: flex; align-items: center; gap: 0.5rem;">
+          <i data-lucide="zap"></i> Apply / Buy Equipment Student Loan
+        </h3>
+        <button class="modal-close" onclick="closeModal('buyLoanModal')">&times;</button>
+      </div>
+
+      <div style="padding: 1.25rem 0;">
+        <div style="text-align: center; margin-bottom: 1.25rem;">
+          <span style="background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.78rem; font-weight: 700;">INSTANT COLLEGE PRE-APPROVAL</span>
+          <h2 style="font-size: 1.8rem; font-weight: 800; color: white; margin: 0.5rem 0 0.2rem 0;">Get Up to <span style="color: #a855f7;">₹50,000</span> Loan</h2>
+          <p style="font-size: 0.82rem; color: #94a3b8; margin: 0;">Instant Equipment Borrowing Credit Line for College Projects & Labs</p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem;">
+          <!-- Option 1: 50,000 Loan (Default) -->
+          <label style="background: rgba(168, 85, 247, 0.15); border: 2px solid #a855f7; border-radius: 12px; padding: 1rem; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+            <div style="display: flex; align-items: center; gap: 0.8rem;">
+              <input type="radio" name="loanPackageOption" value="50000" checked style="accent-color: #a855f7; width: 18px; height: 18px;">
+              <div>
+                <div style="font-weight: 800; color: white; font-size: 1.1rem;">₹50,000 Master Loan Credit</div>
+                <div style="font-size: 0.78rem; color: #cbd5e1;">Full access to RED 6K Cameras, MacBooks, 3D Printers</div>
+              </div>
+            </div>
+            <span style="background: #a855f7; color: white; padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.7rem; font-weight: 800;">RECOMMENDED</span>
+          </label>
+
+          <!-- Option 2: 40,000 Loan -->
+          <label style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 1rem; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+            <div style="display: flex; align-items: center; gap: 0.8rem;">
+              <input type="radio" name="loanPackageOption" value="40000" style="accent-color: #a855f7; width: 18px; height: 18px;">
+              <div>
+                <div style="font-weight: 700; color: white; font-size: 1rem;">₹40,000 Standard Pro Loan</div>
+                <div style="font-size: 0.78rem; color: #94a3b8;">Access to Laptops, Tripods, Multimeters & Sensors</div>
+              </div>
+            </div>
+          </label>
+        </div>
+
+        <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); padding: 0.9rem; border-radius: 10px; font-size: 0.8rem; color: #93c5fd; margin-bottom: 1.5rem; display: flex; align-items: flex-start; gap: 0.6rem;">
+          <i data-lucide="check-circle" style="color: #60a5fa; flex-shrink: 0; margin-top: 2px;"></i>
+          <div>0% Interest Rate • Instant Student Account Activation • Sponsored by SmartCampus Student Development Fund</div>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('buyLoanModal')">Cancel</button>
+          <button type="button" class="btn" onclick="executeBuyLoanForStudent()" style="background: linear-gradient(135deg, #a855f7, #6366f1); color: white; font-weight: 800; padding: 0.6rem 1.2rem; border-radius: 10px; border: none; font-size: 0.9rem; cursor: pointer; box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);">
+            <i data-lucide="shopping-cart"></i> Buy / Activate Loan for Student
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 10: OVERVIEW OF ALL ACTIVE STUDENT LOANS (CLICKED FROM STAT CARD) -->
+  <div class="modal-overlay" id="activeLoansOverviewModal">
+    <div class="modal-content" style="max-width: 780px;">
+      <div class="modal-header">
+        <h3 style="color: #a78bfa; display: flex; align-items: center; gap: 0.5rem;">
+          <i data-lucide="clock"></i> Active Student Equipment Loans Overview (10 Students)
+        </h3>
+        <button class="modal-close" onclick="closeModal('activeLoansOverviewModal')">&times;</button>
+      </div>
+
+      <div style="padding: 1rem 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <span style="font-size: 0.85rem; color: var(--text-muted);">Active Student Loans with ₹40,000 Pre-Approved Credit</span>
+          <span class="status-badge APPROVED">10 ACTIVE LOANS</span>
+        </div>
+
+        <div class="table-container" style="max-height: 380px; overflow-y: auto;">
+          <table style="width: 100%; font-size: 0.85rem;">
+            <thead>
+              <tr>
+                <th>Loan ID</th>
+                <th>Student</th>
+                <th>Department</th>
+                <th>Assigned Equipment</th>
+                <th>Loan Credit</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="activeLoansOverviewTableBody">
+              <!-- Dynamically populated in app.js -->
+            </tbody>
+          </table>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 1.25rem;">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('activeLoansOverviewModal')">Close</button>
+        </div>
+      </div>
     </div>
   </div>
 

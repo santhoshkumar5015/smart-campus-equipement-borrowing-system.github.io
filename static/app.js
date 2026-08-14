@@ -278,6 +278,7 @@ async function refreshAllData() {
     await fetchMaintenanceQueue();
   }
   renderLockersGrid();
+  updateLoanHeaderButton();
 }
 
 // Hybrid API Fetcher (Tries live backend first, falls back seamlessly to LocalStorage)
@@ -1366,4 +1367,101 @@ function escapeHtml(str) {
       "'": '&#039;'
     }[m];
   });
+}
+
+// Student Loan Feature Handlers
+const PRE_APPROVED_LOAN_STUDENTS = [
+  'santhosh', 'jeeva', 'alex', 'jordan', 'priya',
+  'karthik', 'ananya', 'rohan', 'sneha', 'vikram',
+  'STU-3050371', 'STU-10034', 'STU-88210', 'STU-99012', 'STU-10055',
+  'STU-10078', 'STU-10092', 'STU-10114', 'STU-10135', 'STU-10156'
+];
+
+function updateLoanHeaderButton() {
+  const container = document.getElementById('studentLoanHeaderBtnContainer');
+  if (!container) return;
+
+  const profile = PROFILES[currentRole];
+  if (!profile || profile.role === 'ADMIN') {
+    container.innerHTML = '';
+    return;
+  }
+
+  const db = getLocalDB();
+  const activatedLoans = db.activated_student_loans || {};
+  const isPreApproved = PRE_APPROVED_LOAN_STUDENTS.includes(currentRole) || PRE_APPROVED_LOAN_STUDENTS.includes(profile.id);
+  const userActivatedLoan = activatedLoans[profile.id] || (isPreApproved ? 40000 : null);
+
+  if (userActivatedLoan) {
+    container.innerHTML = `
+      <button class="btn" onclick="openStudentLoanModal(${userActivatedLoan})" style="background: linear-gradient(135deg, #059669, #10b981); color: white; border: none; font-weight: 700; padding: 0.45rem 0.9rem; font-size: 0.8rem; box-shadow: 0 0 12px rgba(16, 185, 129, 0.4); border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 0.4rem;" title="Click to view your Active Equipment Loan details">
+        <i data-lucide="credit-card"></i> 💳 My Loan: ₹${userActivatedLoan.toLocaleString()} (Active)
+      </button>
+    `;
+  } else {
+    container.innerHTML = `
+      <button class="btn" onclick="openBuyLoanModal()" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; border: none; font-weight: 700; padding: 0.45rem 0.9rem; font-size: 0.8rem; box-shadow: 0 0 12px rgba(99, 102, 241, 0.4); border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 0.4rem;" title="Click to Apply / Buy Up to ₹50,000 Loan">
+        <i data-lucide="zap"></i> ⚡ Get up to ₹50,000 Loan
+      </button>
+    `;
+  }
+
+  if (window.lucide) window.lucide.createIcons();
+}
+
+function openStudentLoanModal(amount = 40000) {
+  const profile = PROFILES[currentRole];
+  const nameEl = document.getElementById('modalLoanStudentName');
+  const regNoEl = document.getElementById('modalLoanRegNo');
+  if (nameEl) nameEl.textContent = profile.name;
+  if (regNoEl) regNoEl.textContent = profile.subtext.split(' | ')[0] || profile.id;
+
+  const amtEl = document.querySelector('#studentLoanModal [style*="font-size: 2.75rem"]');
+  if (amtEl) amtEl.textContent = `₹${amount.toLocaleString()}`;
+
+  openModal('studentLoanModal');
+}
+
+function openBuyLoanModal() {
+  openModal('buyLoanModal');
+}
+
+function executeBuyLoanForStudent() {
+  const profile = PROFILES[currentRole];
+  const selectedOption = document.querySelector('input[name="loanPackageOption"]:checked');
+  const amount = selectedOption ? parseInt(selectedOption.value) : 50000;
+
+  const db = getLocalDB();
+  if (!db.activated_student_loans) db.activated_student_loans = {};
+  db.activated_student_loans[profile.id] = amount;
+
+  saveLocalDB(db);
+  closeModal('buyLoanModal');
+
+  showToast(`🎉 Congratulations ${profile.name}! Your ₹${amount.toLocaleString()} Equipment Loan is now ACTIVE!`, 'success');
+  updateLoanHeaderButton();
+}
+
+function openActiveLoansModal() {
+  const db = getLocalDB();
+  const tbody = document.getElementById('activeLoansOverviewTableBody');
+  if (!tbody) return;
+
+  const activeLoans = db.loans.filter(l => l.status === 'ACTIVE');
+  if (activeLoans.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No active issued loans found.</td></tr>`;
+  } else {
+    tbody.innerHTML = activeLoans.map(l => `
+      <tr>
+        <td style="font-weight: 700; font-family: monospace; color: #60a5fa;">${l.loan_id}</td>
+        <td style="font-weight: 600;">${escapeHtml(l.student_name)}<br><span style="font-size: 0.72rem; color: var(--text-muted);">${l.register_number || l.student_id}</span></td>
+        <td>${escapeHtml(l.department || 'CSE')}</td>
+        <td>${escapeHtml(l.equipment_name)} (Locker ${l.locker_id})</td>
+        <td style="font-weight: 700; color: #34d399;">₹40,000</td>
+        <td><span class="status-badge APPROVED">ACTIVE</span></td>
+      </tr>
+    `).join('');
+  }
+
+  openModal('activeLoansOverviewModal');
 }
