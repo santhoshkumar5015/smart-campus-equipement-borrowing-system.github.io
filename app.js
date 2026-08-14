@@ -190,21 +190,21 @@ const INITIAL_DB = {
 
 // LocalStorage Persistence Helper
 function getLocalDB() {
-  const dbStr = localStorage.getItem('smart_campus_db_v3');
+  const dbStr = localStorage.getItem('smart_campus_db_v4');
   if (!dbStr) {
-    localStorage.setItem('smart_campus_db_v3', JSON.stringify(INITIAL_DB));
+    localStorage.setItem('smart_campus_db_v4', JSON.stringify(INITIAL_DB));
     return INITIAL_DB;
   }
   const parsed = JSON.parse(dbStr);
   if (!parsed.equipment || parsed.equipment.length < 100) {
-    localStorage.setItem('smart_campus_db_v3', JSON.stringify(INITIAL_DB));
+    localStorage.setItem('smart_campus_db_v4', JSON.stringify(INITIAL_DB));
     return INITIAL_DB;
   }
   return parsed;
 }
 
 function saveLocalDB(db) {
-  localStorage.setItem('smart_campus_db_v3', JSON.stringify(db));
+  localStorage.setItem('smart_campus_db_v4', JSON.stringify(db));
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -734,8 +734,7 @@ function renderEquipmentCatalog() {
               <span><i data-lucide="door-closed"></i> Locker ${item.locker_id}</span>
             </div>
             <div class="meta-row">
-              <span><i data-lucide="indian-rupee"></i> Security Loan Value: ₹40,000</span>
-              <span><i data-lucide="shield-check"></i> ${item.requires_approval ? 'Admin Approval' : 'Instant Loan'}</span>
+              <span><i data-lucide="shield-check"></i> ${item.requires_approval ? 'Admin Approval Required' : 'Instant Self-Checkout'}</span>
             </div>
           </div>
         </div>
@@ -886,7 +885,7 @@ function renderAdminLoansTable(loans) {
     <tr>
       <td style="font-weight: 700; font-family: monospace; color: #60a5fa;">${l.loan_id}</td>
       <td>${escapeHtml(l.student_name)} (${l.student_id})</td>
-      <td>${escapeHtml(l.equipment_name)} (Locker ${l.locker_id})<br><span style="font-size: 0.78rem; color: #34d399; font-weight: 700;">💰 Security Loan Value: ₹40,000</span></td>
+      <td>${escapeHtml(l.equipment_name)} (Locker ${l.locker_id})</td>
       <td style="font-size: 0.85rem; color: var(--text-muted);">${l.issued_at}</td>
       <td style="font-size: 0.85rem; color: var(--text-muted);">${l.due_at}</td>
       <td><span class="status-badge ${l.status}">${l.status}</span></td>
