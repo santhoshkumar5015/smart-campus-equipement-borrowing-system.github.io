@@ -164,14 +164,30 @@ INSERT INTO equipment (id, category_id, name, serial_number, description, specif
 (99, 6, 'Building Material Testing Kit', 'SN-CIV-009', 'Concrete Rebound Schmidt Test Hammer Kit', 'Concrete Compressive Strength Tester 10-70 MPa', 'Structures Lab', 'EXCELLENT', 'AVAILABLE', '2026-02-01', 40000, 'Q-03', 1, 'hammer', '2026-08-01 09:00:00', '2026-08-01 09:00:00'),
 (100, 6, 'Laser Level', 'SN-CIV-010', '360-Degree Self-Leveling Cross Line Laser', 'Green Beam 12 Lines 3D Leveling Tool', 'Structural Lab', 'EXCELLENT', 'AVAILABLE', '2026-03-01', 40000, 'Q-04', 0, 'crosshair', '2026-08-01 09:00:00', '2026-08-01 09:00:00');
 
--- 5. Seed Borrow Requests & Active Loans
+-- 5. Seed Borrow Requests & Active Loans (10 Active Loans for 10 Students worth ₹40,000 each)
 INSERT INTO borrow_requests (id, student_id, equipment_id, borrow_date, expected_return_date, purpose, status, approved_by, qr_code_token, pickup_locker, created_at, updated_at) VALUES
-('REQ-30501', 'STU-3050371', 8, '2026-08-10 09:00', '2026-09-08 17:00', 'Final Year Capstone Project Gimbal Stabilization Shoot', 'APPROVED', 'ADM-00001', 'QR-REQ-30501-STU-3050371', 'B-02', '2026-08-09 10:00:00', '2026-08-09 10:30:00'),
-('REQ-10492', 'STU-88210', 7, '2026-08-10 10:00', '2026-09-09 17:00', 'Monopod Field Audio Recording', 'APPROVED', 'ADM-00001', 'QR-REQ-10492-STU-88210', 'B-01', '2026-08-09 14:00:00', '2026-08-09 14:30:00');
+('REQ-30501', 'STU-3050371', 8, '2026-08-10 09:00', '2026-09-08 17:00', 'Final Year Capstone Project Shoot', 'APPROVED', 'ADM-00001', 'QR-REQ-30501-STU-3050371', 'B-02', '2026-08-10 09:00:00', '2026-08-10 09:00:00'),
+('REQ-10034', 'STU-10055', 11, '2026-08-10 09:30', '2026-09-08 17:00', 'CSE Campus Event Photography', 'APPROVED', 'ADM-00001', 'QR-REQ-10034-STU-10055', 'B-05', '2026-08-10 09:30:00', '2026-08-10 09:30:00'),
+('REQ-10492', 'STU-88210', 7, '2026-08-10 10:00', '2026-09-09 17:00', 'ECE Short Film Production', 'APPROVED', 'ADM-00001', 'QR-REQ-10492-STU-88210', 'B-01', '2026-08-10 10:00:00', '2026-08-10 10:00:00'),
+('REQ-99012', 'STU-10114', 12, '2026-08-11 11:00', '2026-09-10 17:00', 'Robotics Field Test Recording', 'APPROVED', 'ADM-00001', 'QR-REQ-99012-STU-10114', 'B-06', '2026-08-11 11:00:00', '2026-08-11 11:00:00'),
+('REQ-10055', 'STU-10055', 13, '2026-08-11 14:00', '2026-09-10 17:00', 'AI & DS Lab Video Documentation', 'APPROVED', 'ADM-00001', 'QR-REQ-10055-STU-10055', 'C-01', '2026-08-11 14:00:00', '2026-08-11 14:00:00'),
+('REQ-10078', 'STU-10078', 14, '2026-08-12 09:00', '2026-09-11 17:00', 'IT Lab Presentation Recording', 'APPROVED', 'ADM-00001', 'QR-REQ-10078-STU-10078', 'C-02', '2026-08-12 09:00:00', '2026-08-12 09:00:00'),
+('REQ-10092', 'STU-10092', 15, '2026-08-12 10:30', '2026-09-11 17:00', 'Cybersecurity Seminar Coverage', 'APPROVED', 'ADM-00001', 'QR-REQ-10092-STU-10092', 'C-03', '2026-08-12 10:30:00', '2026-08-12 10:30:00'),
+('REQ-10114', 'STU-10114', 16, '2026-08-12 15:00', '2026-09-11 17:00', 'Mechanical CAD Model Video', 'APPROVED', 'ADM-00001', 'QR-REQ-10114-STU-10114', 'C-04', '2026-08-12 15:00:00', '2026-08-12 15:00:00'),
+('REQ-10135', 'STU-10135', 17, '2026-08-13 10:00', '2026-09-12 17:00', 'EEE High Voltage Lab Demo', 'APPROVED', 'ADM-00001', 'QR-REQ-10135-STU-10135', 'C-05', '2026-08-13 10:00:00', '2026-08-13 10:00:00'),
+('REQ-10156', 'STU-10156', 18, '2026-08-13 11:30', '2026-09-12 17:00', 'Aerospace Wind Tunnel Testing', 'APPROVED', 'ADM-00001', 'QR-REQ-10156-STU-10156', 'C-06', '2026-08-13 11:30:00', '2026-08-13 11:30:00');
 
 INSERT INTO loans (loan_id, request_id, student_id, equipment_id, issued_at, due_at, status, issued_by) VALUES
 ('LOAN-30501', 'REQ-30501', 'STU-3050371', 8, '2026-08-10 09:15:00', '2026-09-08 17:00:00', 'ACTIVE', 'ADM-00001'),
-('LOAN-9901', 'REQ-10492', 'STU-88210', 7, '2026-08-10 10:15:00', '2026-09-09 17:00:00', 'ACTIVE', 'ADM-00001');
+('LOAN-10034', 'REQ-10034', 'STU-10055', 11, '2026-08-10 09:45:00', '2026-09-08 17:00:00', 'ACTIVE', 'ADM-00001'),
+('LOAN-9901', 'REQ-10492', 'STU-88210', 7, '2026-08-10 10:15:00', '2026-09-09 17:00:00', 'ACTIVE', 'ADM-00001'),
+('LOAN-99012', 'REQ-99012', 'STU-10114', 12, '2026-08-11 11:15:00', '2026-09-10 17:00:00', 'ACTIVE', 'ADM-00001'),
+('LOAN-10055', 'REQ-10055', 'STU-10055', 13, '2026-08-11 14:15:00', '2026-09-10 17:00:00', 'ACTIVE', 'ADM-00001'),
+('LOAN-10078', 'REQ-10078', 'STU-10078', 14, '2026-08-12 09:15:00', '2026-09-11 17:00:00', 'ACTIVE', 'ADM-00001'),
+('LOAN-10092', 'REQ-10092', 'STU-10092', 15, '2026-08-12 10:45:00', '2026-09-11 17:00:00', 'ACTIVE', 'ADM-00001'),
+('LOAN-10114', 'REQ-10114', 'STU-10114', 16, '2026-08-12 15:15:00', '2026-09-11 17:00:00', 'ACTIVE', 'ADM-00001'),
+('LOAN-10135', 'REQ-10135', 'STU-10135', 17, '2026-08-13 10:15:00', '2026-09-12 17:00:00', 'ACTIVE', 'ADM-00001'),
+('LOAN-10156', 'REQ-10156', 'STU-10156', 18, '2026-08-13 11:45:00', '2026-09-12 17:00:00', 'ACTIVE', 'ADM-00001');
 
 -- 6. Seed Maintenance Item
 INSERT INTO maintenance (equipment_id, issue, reported_at, reported_by, status, resolution) VALUES

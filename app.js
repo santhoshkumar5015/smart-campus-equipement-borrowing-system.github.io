@@ -156,10 +156,28 @@ const INITIAL_DB = {
     { id: 100, category_id: 6, category_name: 'Civil / Architecture', name: 'Laser Level', serial_number: 'SN-CIV-010', specifications: 'Green Beam 12 Lines 3D Leveling Tool', location: 'Structural Lab', condition: 'EXCELLENT', status: 'AVAILABLE', locker_id: 'Q-04', requires_approval: 0, image_icon: 'crosshair', equipment_value: 40000 }
   ],
   borrow_requests: [
-    { id: 'REQ-10492', student_id: 'STU-88210', equipment_id: 7, equipment_name: 'iPad Pro 12.9 M2 + Pencil', borrow_date: '2026-08-10 10:00', expected_return_date: '2026-08-18 17:00', purpose: 'UI Capstone Prototyping Demo', status: 'APPROVED', pickup_locker: 'B-01', qr_code_token: 'QR-REQ-10492-STU-88210', created_at: '2026-08-10 10:00:00' }
+    { id: 'REQ-30501', student_id: 'STU-3050371', equipment_id: 1, equipment_name: 'DSLR Camera', borrow_date: '2026-08-10 09:00', expected_return_date: '2026-09-08 17:00', purpose: 'Final Year Capstone Project Shoot', status: 'APPROVED', pickup_locker: 'A-01', qr_code_token: 'QR-REQ-30501-STU-3050371', created_at: '2026-08-10 09:00:00', equipment_value: 40000 },
+    { id: 'REQ-10034', student_id: 'STU-10034', equipment_id: 2, equipment_name: 'Mirrorless Camera', borrow_date: '2026-08-10 09:30', expected_return_date: '2026-09-08 17:00', purpose: 'CSE Campus Event Photography', status: 'APPROVED', pickup_locker: 'A-02', qr_code_token: 'QR-REQ-10034-STU-10034', created_at: '2026-08-10 09:30:00', equipment_value: 40000 },
+    { id: 'REQ-88210', student_id: 'STU-88210', equipment_id: 3, equipment_name: 'Cinema Camera', borrow_date: '2026-08-10 10:00', expected_return_date: '2026-09-09 17:00', purpose: 'ECE Short Film Production', status: 'APPROVED', pickup_locker: 'A-03', qr_code_token: 'QR-REQ-88210-STU-88210', created_at: '2026-08-10 10:00:00', equipment_value: 40000 },
+    { id: 'REQ-99012', student_id: 'STU-99012', equipment_id: 4, equipment_name: 'Action Camera', borrow_date: '2026-08-11 11:00', expected_return_date: '2026-09-10 17:00', purpose: 'Robotics Field Test Recording', status: 'APPROVED', pickup_locker: 'A-04', qr_code_token: 'QR-REQ-99012-STU-99012', created_at: '2026-08-11 11:00:00', equipment_value: 40000 },
+    { id: 'REQ-10055', student_id: 'STU-10055', equipment_id: 5, equipment_name: 'Camcorder', borrow_date: '2026-08-11 14:00', expected_return_date: '2026-09-10 17:00', purpose: 'AI & DS Lab Video Documentation', status: 'APPROVED', pickup_locker: 'A-05', qr_code_token: 'QR-REQ-10055-STU-10055', created_at: '2026-08-11 14:00:00', equipment_value: 40000 },
+    { id: 'REQ-10078', student_id: 'STU-10078', equipment_id: 6, equipment_name: 'Camera Tripod', borrow_date: '2026-08-12 09:00', expected_return_date: '2026-09-11 17:00', purpose: 'IT Lab Presentation Recording', status: 'APPROVED', pickup_locker: 'A-06', qr_code_token: 'QR-REQ-10078-STU-10078', created_at: '2026-08-12 09:00:00', equipment_value: 40000 },
+    { id: 'REQ-10092', student_id: 'STU-10092', equipment_id: 7, equipment_name: 'Monopod', borrow_date: '2026-08-12 10:30', expected_return_date: '2026-09-11 17:00', purpose: 'Cybersecurity Seminar Coverage', status: 'APPROVED', pickup_locker: 'B-01', qr_code_token: 'QR-REQ-10092-STU-10092', created_at: '2026-08-12 10:30:00', equipment_value: 40000 },
+    { id: 'REQ-10114', student_id: 'STU-10114', equipment_id: 8, equipment_name: 'Gimbal Stabilizer', borrow_date: '2026-08-12 15:00', expected_return_date: '2026-09-11 17:00', purpose: 'Mechanical CAD Model Video', status: 'APPROVED', pickup_locker: 'B-02', qr_code_token: 'QR-REQ-10114-STU-10114', created_at: '2026-08-12 15:00:00', equipment_value: 40000 },
+    { id: 'REQ-10135', student_id: 'STU-10135', equipment_id: 11, equipment_name: '24-70mm Lens', borrow_date: '2026-08-13 10:00', expected_return_date: '2026-09-12 17:00', purpose: 'EEE High Voltage Lab Demo', status: 'APPROVED', pickup_locker: 'B-05', qr_code_token: 'QR-REQ-10135-STU-10135', created_at: '2026-08-13 10:00:00', equipment_value: 40000 },
+    { id: 'REQ-10156', student_id: 'STU-10156', equipment_id: 12, equipment_name: '50mm Prime Lens', borrow_date: '2026-08-13 11:30', expected_return_date: '2026-09-12 17:00', purpose: 'Aerospace Wind Tunnel Testing', status: 'APPROVED', pickup_locker: 'B-06', qr_code_token: 'QR-REQ-10156-STU-10156', created_at: '2026-08-13 11:30:00', equipment_value: 40000 }
   ],
   loans: [
-    { loan_id: 'LOAN-9901', request_id: 'REQ-10492', student_id: 'STU-88210', student_name: 'Alex Rivera', register_number: 'RA2311003050112', department: 'ECE', equipment_id: 7, equipment_name: 'iPad Pro 12.9 M2 + Pencil', locker_id: 'B-01', issued_at: '2026-08-10 10:15:00', due_at: '2026-08-18 17:00:00', status: 'ACTIVE' }
+    { loan_id: 'LOAN-30501', request_id: 'REQ-30501', student_id: 'STU-3050371', student_name: 'Santhosh Kumar S', register_number: 'RA2311003050371', department: 'CSE', equipment_id: 1, equipment_name: 'DSLR Camera', locker_id: 'A-01', issued_at: '2026-08-10 09:15:00', due_at: '2026-09-08 17:00:00', status: 'ACTIVE', equipment_value: 40000 },
+    { loan_id: 'LOAN-10034', request_id: 'REQ-10034', student_id: 'STU-10034', student_name: 'Jeeva Kumar', register_number: 'RA2311003050340', department: 'CSE', equipment_id: 2, equipment_name: 'Mirrorless Camera', locker_id: 'A-02', issued_at: '2026-08-10 09:45:00', due_at: '2026-09-08 17:00:00', status: 'ACTIVE', equipment_value: 40000 },
+    { loan_id: 'LOAN-88210', request_id: 'REQ-88210', student_id: 'STU-88210', student_name: 'Alex Rivera', register_number: 'RA2311003050112', department: 'ECE', equipment_id: 3, equipment_name: 'Cinema Camera', locker_id: 'A-03', issued_at: '2026-08-10 10:15:00', due_at: '2026-09-09 17:00:00', status: 'ACTIVE', equipment_value: 40000 },
+    { loan_id: 'LOAN-99012', request_id: 'REQ-99012', student_id: 'STU-99012', student_name: 'Jordan Smith', register_number: 'RA2311003050882', department: 'Robotics', equipment_id: 4, equipment_name: 'Action Camera', locker_id: 'A-04', issued_at: '2026-08-11 11:15:00', due_at: '2026-09-10 17:00:00', status: 'ACTIVE', equipment_value: 40000 },
+    { loan_id: 'LOAN-10055', request_id: 'REQ-10055', student_id: 'STU-10055', student_name: 'Priya Sharma', register_number: 'RA2311003050055', department: 'AI & DS', equipment_id: 5, equipment_name: 'Camcorder', locker_id: 'A-05', issued_at: '2026-08-11 14:15:00', due_at: '2026-09-10 17:00:00', status: 'ACTIVE', equipment_value: 40000 },
+    { loan_id: 'LOAN-10078', request_id: 'REQ-10078', student_id: 'STU-10078', student_name: 'Karthik Raja', register_number: 'RA2311003050078', department: 'IT', equipment_id: 6, equipment_name: 'Camera Tripod', locker_id: 'A-06', issued_at: '2026-08-12 09:15:00', due_at: '2026-09-11 17:00:00', status: 'ACTIVE', equipment_value: 40000 },
+    { loan_id: 'LOAN-10092', request_id: 'REQ-10092', student_id: 'STU-10092', student_name: 'Ananya Patel', register_number: 'RA2311003050092', department: 'Cybersecurity', equipment_id: 7, equipment_name: 'Monopod', locker_id: 'B-01', issued_at: '2026-08-12 10:45:00', due_at: '2026-09-11 17:00:00', status: 'ACTIVE', equipment_value: 40000 },
+    { loan_id: 'LOAN-10114', request_id: 'REQ-10114', student_id: 'STU-10114', student_name: 'Rohan Verma', register_number: 'RA2311003050114', department: 'Mechanical', equipment_id: 8, equipment_name: 'Gimbal Stabilizer', locker_id: 'B-02', issued_at: '2026-08-12 15:15:00', due_at: '2026-09-11 17:00:00', status: 'ACTIVE', equipment_value: 40000 },
+    { loan_id: 'LOAN-10135', request_id: 'REQ-10135', student_id: 'STU-10135', student_name: 'Sneha Reddy', register_number: 'RA2311003050135', department: 'EEE', equipment_id: 11, equipment_name: '24-70mm Lens', locker_id: 'B-05', issued_at: '2026-08-13 10:15:00', due_at: '2026-09-12 17:00:00', status: 'ACTIVE', equipment_value: 40000 },
+    { loan_id: 'LOAN-10156', request_id: 'REQ-10156', student_id: 'STU-10156', student_name: 'Vikram Sengupta', register_number: 'RA2311003050156', department: 'Aerospace', equipment_id: 12, equipment_name: '50mm Prime Lens', locker_id: 'B-06', issued_at: '2026-08-13 11:45:00', due_at: '2026-09-12 17:00:00', status: 'ACTIVE', equipment_value: 40000 }
   ],
   returns: [],
   maintenance: [
@@ -172,16 +190,21 @@ const INITIAL_DB = {
 
 // LocalStorage Persistence Helper
 function getLocalDB() {
-  const dbStr = localStorage.getItem('smart_campus_db');
+  const dbStr = localStorage.getItem('smart_campus_db_v3');
   if (!dbStr) {
-    localStorage.setItem('smart_campus_db', JSON.stringify(INITIAL_DB));
+    localStorage.setItem('smart_campus_db_v3', JSON.stringify(INITIAL_DB));
     return INITIAL_DB;
   }
-  return JSON.parse(dbStr);
+  const parsed = JSON.parse(dbStr);
+  if (!parsed.equipment || parsed.equipment.length < 100) {
+    localStorage.setItem('smart_campus_db_v3', JSON.stringify(INITIAL_DB));
+    return INITIAL_DB;
+  }
+  return parsed;
 }
 
 function saveLocalDB(db) {
-  localStorage.setItem('smart_campus_db', JSON.stringify(db));
+  localStorage.setItem('smart_campus_db_v3', JSON.stringify(db));
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -863,7 +886,7 @@ function renderAdminLoansTable(loans) {
     <tr>
       <td style="font-weight: 700; font-family: monospace; color: #60a5fa;">${l.loan_id}</td>
       <td>${escapeHtml(l.student_name)} (${l.student_id})</td>
-      <td>${escapeHtml(l.equipment_name)} (Locker ${l.locker_id})</td>
+      <td>${escapeHtml(l.equipment_name)} (Locker ${l.locker_id})<br><span style="font-size: 0.78rem; color: #34d399; font-weight: 700;">💰 Security Loan Value: ₹40,000</span></td>
       <td style="font-size: 0.85rem; color: var(--text-muted);">${l.issued_at}</td>
       <td style="font-size: 0.85rem; color: var(--text-muted);">${l.due_at}</td>
       <td><span class="status-badge ${l.status}">${l.status}</span></td>
