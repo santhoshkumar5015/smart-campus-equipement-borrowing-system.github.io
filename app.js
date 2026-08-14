@@ -7,13 +7,14 @@
 const API_BASE = '/api';
 
 // Global User & Role State
-let currentRole = 'jeeva'; // 'jeeva', 'alex', 'jordan', 'admin'
+let currentRole = 'santhosh'; // Default active profile: Santhosh Kumar S
 let currentCategory = 'All';
 let searchQuery = '';
 let equipmentList = [];
 let myReservations = [];
 
 const PROFILES = {
+  santhosh: { id: 'STU-3050371', name: 'Santhosh Kumar S', email: 'santhosh@college.edu', role: 'STUDENT', avatar: 'SK', subtext: 'RA2311003050371 | CSE 4th Yr' },
   jeeva: { id: 'STU-10034', name: 'Jeeva Kumar', email: 'jeeva@college.edu', role: 'STUDENT', avatar: 'JK', subtext: 'RA2311003050340 | CSE 4th Yr' },
   alex: { id: 'STU-88210', name: 'Alex Rivera', email: 'arivera@college.edu', role: 'STUDENT', avatar: 'AR', subtext: 'RA2311003050112 | ECE 4th Yr' },
   jordan: { id: 'STU-99012', name: 'Jordan Smith', email: 'jsmith@college.edu', role: 'STUDENT', avatar: 'JS', subtext: 'RA2311003050882 | Robotics 3rd Yr' },

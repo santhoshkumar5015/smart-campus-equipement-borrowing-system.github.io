@@ -33,6 +33,7 @@ INSERT INTO users (id, name, email, password_hash, role, created_at) VALUES
 
 -- Seed Student Academic Profiles
 INSERT INTO students (student_id, user_id, register_number, department, year, semester, section, phone) VALUES
+('S-3050371', 'STU-3050371', 'RA2311003050371', 'CSE', 4, 7, 'A', '+91 9876543299'),
 ('S-10034', 'STU-10034', 'RA2311003050340', 'CSE', 4, 7, 'A', '+91 9876543212'),
 ('S-88210', 'STU-88210', 'RA2311003050112', 'ECE', 4, 7, 'A', '+91 9876543210'),
 ('S-99012', 'STU-99012', 'RA2311003050882', 'Robotics Engineering', 3, 5, 'B', '+91 9876543211'),
