@@ -14,38 +14,23 @@ let equipmentList = [];
 let myReservations = [];
 
 const PROFILES = {
-  jeeva: {
-    id: 'STU-10034',
-    name: 'Jeeva Kumar',
-    email: 'jeeva@college.edu',
-    role: 'STUDENT',
-    avatar: 'JK',
-    subtext: 'RA2311003050340 | CSE 4th Yr'
-  },
-  alex: {
-    id: 'STU-88210',
-    name: 'Alex Rivera',
-    email: 'arivera@college.edu',
-    role: 'STUDENT',
-    avatar: 'AR',
-    subtext: 'RA2311003050112 | ECE 4th Yr'
-  },
-  jordan: {
-    id: 'STU-99012',
-    name: 'Jordan Smith',
-    email: 'jsmith@college.edu',
-    role: 'STUDENT',
-    avatar: 'JS',
-    subtext: 'RA2311003050882 | Robotics 3rd Yr'
-  },
-  admin: {
-    id: 'ADM-00001',
-    name: 'Dr. Sarah Vance',
-    email: 'svance@college.edu',
-    role: 'ADMIN',
-    avatar: 'SV',
-    subtext: 'ADM-00001 | Lab Manager'
-  }
+  jeeva: { id: 'STU-10034', name: 'Jeeva Kumar', email: 'jeeva@college.edu', role: 'STUDENT', avatar: 'JK', subtext: 'RA2311003050340 | CSE 4th Yr' },
+  alex: { id: 'STU-88210', name: 'Alex Rivera', email: 'arivera@college.edu', role: 'STUDENT', avatar: 'AR', subtext: 'RA2311003050112 | ECE 4th Yr' },
+  jordan: { id: 'STU-99012', name: 'Jordan Smith', email: 'jsmith@college.edu', role: 'STUDENT', avatar: 'JS', subtext: 'RA2311003050882 | Robotics 3rd Yr' },
+  priya: { id: 'STU-10055', name: 'Priya Sharma', email: 'psharma@college.edu', role: 'STUDENT', avatar: 'PS', subtext: 'RA2311003050055 | AI & DS 3rd Yr' },
+  karthik: { id: 'STU-10078', name: 'Karthik Raja', email: 'kraja@college.edu', role: 'STUDENT', avatar: 'KR', subtext: 'RA2311003050078 | IT 4th Yr' },
+  ananya: { id: 'STU-10092', name: 'Ananya Patel', email: 'apatel@college.edu', role: 'STUDENT', avatar: 'AP', subtext: 'RA2311003050092 | Cybersecurity 2nd Yr' },
+  rohan: { id: 'STU-10114', name: 'Rohan Verma', email: 'rverma@college.edu', role: 'STUDENT', avatar: 'RV', subtext: 'RA2311003050114 | Mechanical 4th Yr' },
+  sneha: { id: 'STU-10135', name: 'Sneha Reddy', email: 'sreddy@college.edu', role: 'STUDENT', avatar: 'SR', subtext: 'RA2311003050135 | EEE 3rd Yr' },
+  vikram: { id: 'STU-10156', name: 'Vikram Sengupta', email: 'vgupta@college.edu', role: 'STUDENT', avatar: 'VS', subtext: 'RA2311003050156 | Aerospace 4th Yr' },
+  meera: { id: 'STU-10178', name: 'Meera Krishnan', email: 'mkrishnan@college.edu', role: 'STUDENT', avatar: 'MK', subtext: 'RA2311003050178 | Biotech 3rd Yr' },
+  arjun: { id: 'STU-10201', name: 'Arjun Das', email: 'adas@college.edu', role: 'STUDENT', avatar: 'AD', subtext: 'RA2311003050201 | Civil 2nd Yr' },
+  divya: { id: 'STU-10223', name: 'Divya Nair', email: 'dnair@college.edu', role: 'STUDENT', avatar: 'DN', subtext: 'RA2311003050223 | Chemical 3rd Yr' },
+  siddharth: { id: 'STU-10245', name: 'Siddharth Menon', email: 'smenon@college.edu', role: 'STUDENT', avatar: 'SM', subtext: 'RA2311003050245 | Mechatronics 4th Yr' },
+  kavya: { id: 'STU-10267', name: 'Kavya Subramanian', email: 'ksubra@college.edu', role: 'STUDENT', avatar: 'KS', subtext: 'RA2311003050267 | VLSI M.Tech 1st Yr' },
+  admin: { id: 'ADM-00001', name: 'Dr. Sarah Vance', email: 'svance@college.edu', role: 'ADMIN', avatar: 'SV', subtext: 'ADM-00001 | Lab Manager' },
+  admin2: { id: 'ADM-00002', name: 'Prof. Robert Lang', email: 'rlang@college.edu', role: 'ADMIN', avatar: 'RL', subtext: 'ADM-00002 | Robotics Director' },
+  admin3: { id: 'ADM-00003', name: 'Ramesh Babu', email: 'rbabu@college.edu', role: 'ADMIN', avatar: 'RB', subtext: 'ADM-00003 | Hardware Tech' }
 };
 
 // Default Initial Local Database for Standalone Static Hosting (Netlify / Vercel)

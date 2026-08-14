@@ -11,18 +11,42 @@ INSERT INTO categories (category_id, category_name, description) VALUES
 (5, 'IoT & Hardware', 'ESP32, ESP8266, Arduino boards, sensor modules, and breadboards'),
 (6, 'Lab Tools', 'Digital oscilloscopes, multimeters, DC power supplies, and soldering stations');
 
--- Seed Users
+-- Seed Users (14 Students + 3 Admins = 17 Roles)
 INSERT INTO users (id, name, email, password_hash, role, created_at) VALUES
+('STU-10034', 'Jeeva Kumar', 'jeeva@college.edu', 'pbkdf2:sha256:student_hash', 'STUDENT', '2026-08-01 09:00:00'),
 ('STU-88210', 'Alex Rivera', 'arivera@college.edu', 'pbkdf2:sha256:student_hash', 'STUDENT', '2026-08-01 09:00:00'),
 ('STU-99012', 'Jordan Smith', 'jsmith@college.edu', 'pbkdf2:sha256:student_hash', 'STUDENT', '2026-08-01 09:00:00'),
-('STU-10034', 'Jeeva Kumar', 'jeeva@college.edu', 'pbkdf2:sha256:student_hash', 'STUDENT', '2026-08-01 09:00:00'),
-('ADM-00001', 'Dr. Sarah Vance (Lab Manager)', 'svance@college.edu', 'pbkdf2:sha256:admin_hash', 'ADMIN', '2026-08-01 09:00:00');
+('STU-10055', 'Priya Sharma', 'psharma@college.edu', 'pbkdf2:sha256:student_hash', 'STUDENT', '2026-08-01 09:00:00'),
+('STU-10078', 'Karthik Raja', 'kraja@college.edu', 'pbkdf2:sha256:student_hash', 'STUDENT', '2026-08-01 09:00:00'),
+('STU-10092', 'Ananya Patel', 'apatel@college.edu', 'pbkdf2:sha256:student_hash', 'STUDENT', '2026-08-01 09:00:00'),
+('STU-10114', 'Rohan Verma', 'rverma@college.edu', 'pbkdf2:sha256:student_hash', 'STUDENT', '2026-08-01 09:00:00'),
+('STU-10135', 'Sneha Reddy', 'sreddy@college.edu', 'pbkdf2:sha256:student_hash', 'STUDENT', '2026-08-01 09:00:00'),
+('STU-10156', 'Vikram Sengupta', 'vgupta@college.edu', 'pbkdf2:sha256:student_hash', 'STUDENT', '2026-08-01 09:00:00'),
+('STU-10178', 'Meera Krishnan', 'mkrishnan@college.edu', 'pbkdf2:sha256:student_hash', 'STUDENT', '2026-08-01 09:00:00'),
+('STU-10201', 'Arjun Das', 'adas@college.edu', 'pbkdf2:sha256:student_hash', 'STUDENT', '2026-08-01 09:00:00'),
+('STU-10223', 'Divya Nair', 'dnair@college.edu', 'pbkdf2:sha256:student_hash', 'STUDENT', '2026-08-01 09:00:00'),
+('STU-10245', 'Siddharth Menon', 'smenon@college.edu', 'pbkdf2:sha256:student_hash', 'STUDENT', '2026-08-01 09:00:00'),
+('STU-10267', 'Kavya Subramanian', 'ksubra@college.edu', 'pbkdf2:sha256:student_hash', 'STUDENT', '2026-08-01 09:00:00'),
+('ADM-00001', 'Dr. Sarah Vance (Lab Manager)', 'svance@college.edu', 'pbkdf2:sha256:admin_hash', 'ADMIN', '2026-08-01 09:00:00'),
+('ADM-00002', 'Prof. Robert Lang (Robotics Director)', 'rlang@college.edu', 'pbkdf2:sha256:admin_hash', 'ADMIN', '2026-08-01 09:00:00'),
+('ADM-00003', 'Ramesh Babu (Hardware Tech)', 'rbabu@college.edu', 'pbkdf2:sha256:admin_hash', 'ADMIN', '2026-08-01 09:00:00');
 
 -- Seed Student Academic Profiles
 INSERT INTO students (student_id, user_id, register_number, department, year, semester, section, phone) VALUES
+('S-10034', 'STU-10034', 'RA2311003050340', 'CSE', 4, 7, 'A', '+91 9876543212'),
 ('S-88210', 'STU-88210', 'RA2311003050112', 'ECE', 4, 7, 'A', '+91 9876543210'),
 ('S-99012', 'STU-99012', 'RA2311003050882', 'Robotics Engineering', 3, 5, 'B', '+91 9876543211'),
-('S-10034', 'STU-10034', 'RA2311003050340', 'CSE', 4, 7, 'A', '+91 9876543212');
+('S-10055', 'STU-10055', 'RA2311003050055', 'AI & Data Science', 3, 5, 'A', '+91 9876543213'),
+('S-10078', 'STU-10078', 'RA2311003050078', 'Information Tech (IT)', 4, 7, 'C', '+91 9876543214'),
+('S-10092', 'STU-10092', 'RA2311003050092', 'Cybersecurity', 2, 3, 'B', '+91 9876543215'),
+('S-10114', 'STU-10114', 'RA2311003050114', 'Mechanical Engg', 4, 7, 'A', '+91 9876543216'),
+('S-10135', 'STU-10135', 'RA2311003050135', 'EEE', 3, 5, 'B', '+91 9876543217'),
+('S-10156', 'STU-10156', 'RA2311003050156', 'Aerospace Engg', 4, 7, 'A', '+91 9876543218'),
+('S-10178', 'STU-10178', 'RA2311003050178', 'Biotechnology', 3, 5, 'A', '+91 9876543219'),
+('S-10201', 'STU-10201', 'RA2311003050201', 'Civil Engg', 2, 3, 'C', '+91 9876543220'),
+('S-10223', 'STU-10223', 'RA2311003050223', 'Chemical Engg', 3, 5, 'B', '+91 9876543221'),
+('S-10245', 'STU-10245', 'RA2311003050245', 'Mechatronics', 4, 7, 'A', '+91 9876543222'),
+('S-10267', 'STU-10267', 'RA2311003050267', 'VLSI & Microelectronics', 1, 1, 'A', '+91 9876543223');
 
 -- Seed Equipment Units
 INSERT INTO equipment (id, category_id, name, serial_number, description, specifications, location, condition, status, purchase_date, locker_id, requires_approval, image_icon, created_at, updated_at) VALUES
@@ -50,4 +74,4 @@ INSERT INTO maintenance (equipment_id, issue, reported_at, reported_by, status, 
 
 -- Seed Audit Log Entry
 INSERT INTO audit_logs (user_id, action, entity_type, entity_id, timestamp, details) VALUES
-('SYSTEM', 'SYSTEM_INITIALIZATION', 'SYSTEM', 'SYS-01', '2026-08-01 09:00:00', 'SmartCampus EquipBorrow database initialized with 6 categories and 10 equipment units.');
+('SYSTEM', 'SYSTEM_INITIALIZATION', 'SYSTEM', 'SYS-01', '2026-08-01 09:00:00', 'SmartCampus EquipBorrow database initialized with 6 categories, 17 user roles, and 10 equipment units.');
