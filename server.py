@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Smart Campus Equipment Borrowing System - Backend REST API Server
-Strictly enforces Business Rules BR-01 to BR-10.
+SmartCampus EquipBorrow - Backend REST API Server
+Tailored for College Equipment Borrowing, Approval, Tracking, Return & Maintenance.
+Enforces Business Rules BR-01 to BR-20.
 """
 
 import os
@@ -21,8 +22,7 @@ except Exception:
     DB_PATH = "/tmp/smart_campus.db"
 
 DEFAULT_PORTS = [8080, 8000, 5000, 8888, 3000]
-
-MAX_ACTIVE_BORROWINGS = 2  # BR-05
+MAX_ACTIVE_LOANS = 2  # BR-06
 
 
 def get_db():
@@ -35,115 +35,157 @@ def init_db():
     conn = get_db()
     cursor = conn.cursor()
 
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS users (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        email TEXT NOT NULL UNIQUE,
-        password_hash TEXT NOT NULL,
-        role TEXT NOT NULL DEFAULT 'student'
-    )
-    """)
+    # Execute DDL Schema
+    schema_path = os.path.join(BASE_DIR, "database", "schema.sql")
+    if os.path.exists(schema_path):
+        with open(schema_path, "r") as f:
+            cursor.executescript(f.read())
+    else:
+        # Fallback DDL if file not found
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL UNIQUE,
+            password_hash TEXT NOT NULL,
+            role TEXT NOT NULL DEFAULT 'STUDENT',
+            is_active INTEGER DEFAULT 1,
+            created_at TEXT NOT NULL
+        )
+        """)
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS students (
+            student_id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL UNIQUE,
+            register_number TEXT NOT NULL UNIQUE,
+            department TEXT NOT NULL,
+            year INTEGER NOT NULL,
+            semester INTEGER NOT NULL,
+            section TEXT NOT NULL,
+            phone TEXT NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+        """)
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS categories (
+            category_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            category_name TEXT NOT NULL UNIQUE,
+            description TEXT,
+            is_active INTEGER DEFAULT 1
+        )
+        """)
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS equipment (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            category_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            serial_number TEXT NOT NULL UNIQUE,
+            description TEXT,
+            specifications TEXT,
+            location TEXT NOT NULL,
+            condition TEXT DEFAULT 'GOOD',
+            status TEXT DEFAULT 'AVAILABLE',
+            purchase_date TEXT,
+            locker_id TEXT NOT NULL,
+            requires_approval INTEGER DEFAULT 0,
+            image_icon TEXT DEFAULT 'box',
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            FOREIGN KEY (category_id) REFERENCES categories(category_id)
+        )
+        """)
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS borrow_requests (
+            id TEXT PRIMARY KEY,
+            student_id TEXT NOT NULL,
+            equipment_id INTEGER NOT NULL,
+            borrow_date TEXT NOT NULL,
+            expected_return_date TEXT NOT NULL,
+            purpose TEXT NOT NULL,
+            status TEXT DEFAULT 'PENDING',
+            rejection_reason TEXT,
+            approved_by TEXT,
+            qr_code_token TEXT NOT NULL,
+            pickup_locker TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            FOREIGN KEY (student_id) REFERENCES users(id),
+            FOREIGN KEY (equipment_id) REFERENCES equipment(id)
+        )
+        """)
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS loans (
+            loan_id TEXT PRIMARY KEY,
+            request_id TEXT NOT NULL UNIQUE,
+            student_id TEXT NOT NULL,
+            equipment_id INTEGER NOT NULL,
+            issued_at TEXT NOT NULL,
+            due_at TEXT NOT NULL,
+            returned_at TEXT,
+            status TEXT DEFAULT 'ACTIVE',
+            issued_by TEXT NOT NULL,
+            FOREIGN KEY (request_id) REFERENCES borrow_requests(id),
+            FOREIGN KEY (student_id) REFERENCES users(id),
+            FOREIGN KEY (equipment_id) REFERENCES equipment(id)
+        )
+        """)
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS returns (
+            return_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            loan_id TEXT NOT NULL UNIQUE,
+            returned_at TEXT NOT NULL,
+            condition TEXT NOT NULL,
+            missing_accessories TEXT,
+            damage_description TEXT,
+            remarks TEXT,
+            processed_by TEXT NOT NULL,
+            FOREIGN KEY (loan_id) REFERENCES loans(loan_id)
+        )
+        """)
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS maintenance (
+            maintenance_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            equipment_id INTEGER NOT NULL,
+            issue TEXT NOT NULL,
+            reported_at TEXT NOT NULL,
+            reported_by TEXT NOT NULL,
+            status TEXT DEFAULT 'REPORTED',
+            resolution TEXT,
+            completed_at TEXT,
+            FOREIGN KEY (equipment_id) REFERENCES equipment(id)
+        )
+        """)
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS notifications (
+            notification_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
+            title TEXT NOT NULL,
+            message TEXT NOT NULL,
+            type TEXT NOT NULL,
+            is_read INTEGER DEFAULT 0,
+            created_at TEXT NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+        """)
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS audit_logs (
+            log_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
+            action TEXT NOT NULL,
+            entity_type TEXT NOT NULL,
+            entity_id TEXT NOT NULL,
+            timestamp TEXT NOT NULL,
+            details TEXT NOT NULL
+        )
+        """)
 
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS equipment (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        category TEXT NOT NULL,
-        specifications TEXT,
-        serial_number TEXT UNIQUE,
-        location TEXT NOT NULL,
-        status TEXT NOT NULL DEFAULT 'Available',
-        condition TEXT DEFAULT 'Excellent',
-        battery_level INTEGER DEFAULT 100,
-        locker_id TEXT NOT NULL,
-        requires_approval INTEGER DEFAULT 0,
-        image_icon TEXT DEFAULT 'box'
-    )
-    """)
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS borrow_requests (
-        id TEXT PRIMARY KEY,
-        equipment_id INTEGER NOT NULL,
-        user_id TEXT NOT NULL,
-        user_name TEXT NOT NULL,
-        user_email TEXT NOT NULL,
-        borrow_date TEXT NOT NULL,
-        return_date TEXT NOT NULL,
-        purpose TEXT NOT NULL,
-        status TEXT NOT NULL DEFAULT 'Pending',
-        rejection_reason TEXT,
-        qr_code_token TEXT NOT NULL,
-        pickup_locker TEXT NOT NULL,
-        created_at TEXT NOT NULL,
-        FOREIGN KEY (equipment_id) REFERENCES equipment (id),
-        FOREIGN KEY (user_id) REFERENCES users (id)
-    )
-    """)
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS returns (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        request_id TEXT NOT NULL,
-        returned_at TEXT NOT NULL,
-        condition TEXT NOT NULL,
-        remarks TEXT,
-        FOREIGN KEY (request_id) REFERENCES borrow_requests (id)
-    )
-    """)
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS audit_logs (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        action TEXT NOT NULL,
-        user_info TEXT NOT NULL,
-        details TEXT NOT NULL,
-        timestamp TEXT NOT NULL
-    )
-    """)
-
+    # Seed data if empty
     cursor.execute("SELECT COUNT(*) FROM users")
     if cursor.fetchone()[0] == 0:
-        users_seed = [
-            ("STU-88210", "Alex Rivera", "arivera@campus.edu", "pbkdf2:sha256:student_hash", "student"),
-            ("STU-99012", "Jordan Smith", "jsmith@campus.edu", "pbkdf2:sha256:student_hash", "student"),
-            ("ADM-00001", "Dr. Sarah Vance (Lab Manager)", "svance@campus.edu", "pbkdf2:sha256:admin_hash", "admin")
-        ]
-        cursor.executemany("INSERT INTO users VALUES (?, ?, ?, ?, ?)", users_seed)
-
-    cursor.execute("SELECT COUNT(*) FROM equipment")
-    if cursor.fetchone()[0] == 0:
-        equipment_seed = [
-            ("MacBook Pro M3 Max 16\"", "Computing & Laptops", "Apple M3 Max 36GB RAM, 1TB SSD", "SN-MBP-9021", "CS Innovation Lab 201", "Available", "Excellent", 98, "A-01", 0, "laptop"),
-            ("Sony FX3 Cinema Camera Kit", "AV & Cinema", "Full-frame 4K, 24-70mm GM II lens, XLR handle", "SN-AV-4482", "Media Studio B", "Available", "Excellent", 85, "A-02", 1, "camera"),
-            ("Meta Quest 3 VR Headset (512GB)", "VR & AR", "Includes Touch Plus controllers & Link Cable", "SN-VR-8812", "Spatial Computing Hub", "Available", "Good", 92, "A-03", 0, "glasses"),
-            ("DJI Mavic 3 Pro Cine Drone", "Robotics & Drones", "Tri-camera system, Apple ProRes, Smart Controller", "SN-DRONE-304", "Autonomous Systems Lab", "Available", "Excellent", 78, "A-04", 1, "drone"),
-            ("NVIDIA Jetson Orin AGX Kit", "IoT & Electronics", "275 TOPS AI performance, 64GB RAM", "SN-NV-7719", "AI Hardware Lab", "Available", "New", 100, "A-05", 0, "cpu"),
-            ("Rigol 100MHz Oscilloscope Kit", "Lab Tools", "4-Channel Digital Storage, Probes Included", "SN-SCOPE-110", "Circuit Design Lab", "Available", "Good", 100, "A-06", 0, "activity"),
-            ("iPad Pro 12.9 M2 + Pencil", "Computing & Laptops", "256GB Wi-Fi, Apple Pencil v2, Magic Keyboard", "SN-IPAD-551", "Design Innovation Studio", "Borrowed", "Good", 65, "B-01", 0, "tablet"),
-            ("Shure SM7B + Focusrite Audio Kit", "AV & Cinema", "Broadcast Mic, Cloudlifter CL-1, Scarlett 2i2", "SN-AUDIO-992", "Podcast Studio 2", "Available", "Excellent", 100, "B-02", 0, "mic"),
-            ("TurtleBot 4 ROS 2 Mobile Robot", "Robotics & Drones", "iRobot Create 3 base, OAK-D Pro camera, LiDAR", "SN-BOT-004", "Mechatronics Lab", "Maintenance", "Fair", 40, "B-03", 1, "bot"),
-            ("Raspberry Pi 5 Lab Starter Bundle", "IoT & Electronics", "8GB RAM, NVMe Base, Touchscreen, Sensors", "SN-RPI-505", "Embedded Systems Room", "Available", "New", 100, "B-04", 0, "cpu")
-        ]
-        cursor.executemany("""
-        INSERT INTO equipment (name, category, specifications, serial_number, location, status, condition, battery_level, locker_id, requires_approval, image_icon)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, equipment_seed)
-
-        now = datetime.datetime.now()
-        yesterday = (now - datetime.timedelta(days=1)).strftime("%Y-%m-%d %H:%M")
-        next_week = (now + datetime.timedelta(days=5)).strftime("%Y-%m-%d %H:%M")
-
-        cursor.execute("""
-        INSERT INTO borrow_requests (id, equipment_id, user_id, user_name, user_email, borrow_date, return_date, purpose, status, qr_code_token, pickup_locker, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, ("REQ-10492", 7, "STU-88210", "Alex Rivera", "arivera@campus.edu", yesterday, next_week, "UI Design Project Capstone", "CheckedOut", "QR-REQ-10492-STU-88210", "B-01", yesterday))
-
-        cursor.execute("""
-        INSERT INTO audit_logs (action, user_info, details, timestamp)
-        VALUES (?, ?, ?, ?)
-        """, ("INITIALIZATION", "System", "Campus Equipment Database seeded with initial inventory & business rules configuration.", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+        seed_path = os.path.join(BASE_DIR, "database", "seed.sql")
+        if os.path.exists(seed_path):
+            with open(seed_path, "r") as f:
+                cursor.executescript(f.read())
 
     conn.commit()
     conn.close()
@@ -159,7 +201,7 @@ class SmartCampusRequestHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "application/json")
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-User-Role")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-User-Role, X-User-Id")
         self.end_headers()
         self.wfile.write(json.dumps(data).encode("utf-8"))
 
@@ -167,8 +209,14 @@ class SmartCampusRequestHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-User-Role")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-User-Role, X-User-Id")
         self.end_headers()
+
+    def get_auth_role(self):
+        return self.headers.get("X-User-Role", "STUDENT").upper()
+
+    def get_auth_user_id(self):
+        return self.headers.get("X-User-Id", "STU-88210")
 
     def do_GET(self):
         parsed_url = urllib.parse.urlparse(self.path)
@@ -227,28 +275,33 @@ class SmartCampusRequestHandler(BaseHTTPRequestHandler):
             status = query_params.get("status", [None])[0]
             search = query_params.get("search", [None])[0]
 
-            sql = "SELECT * FROM equipment WHERE 1=1"
+            sql = """
+            SELECT e.*, c.category_name 
+            FROM equipment e
+            LEFT JOIN categories c ON e.category_id = c.category_id
+            WHERE 1=1
+            """
             params = []
 
             if category and category != "All":
-                sql += " AND category = ?"
-                params.append(category)
+                sql += " AND (c.category_name = ? OR e.category_id = ?)"
+                params.extend([category, category])
             if status and status != "All":
-                sql += " AND status = ?"
-                params.append(status)
+                sql += " AND e.status = ?"
+                params.append(status.upper())
             if search:
-                sql += " AND (name LIKE ? OR specifications LIKE ? OR location LIKE ? OR serial_number LIKE ?)"
+                sql += " AND (e.name LIKE ? OR e.specifications LIKE ? OR e.location LIKE ? OR e.serial_number LIKE ?)"
                 pattern = f"%{search}%"
                 params.extend([pattern, pattern, pattern, pattern])
 
-            sql += " ORDER BY id DESC"
+            sql += " ORDER BY e.id DESC"
             cursor.execute(sql, params)
             items = [dict(row) for row in cursor.fetchall()]
             self.send_json_response({"success": True, "data": items})
 
         elif path.startswith("/api/equipment/"):
             eq_id = path.split("/")[3]
-            cursor.execute("SELECT * FROM equipment WHERE id = ?", (eq_id,))
+            cursor.execute("SELECT e.*, c.category_name FROM equipment e LEFT JOIN categories c ON e.category_id = c.category_id WHERE e.id = ?", (eq_id,))
             item = cursor.fetchone()
             if item:
                 self.send_json_response({"success": True, "data": dict(item)})
@@ -260,65 +313,118 @@ class SmartCampusRequestHandler(BaseHTTPRequestHandler):
             status = query_params.get("status", [None])[0]
 
             sql = """
-            SELECT r.*, e.name as equipment_name, e.category as equipment_category, e.image_icon, e.location
+            SELECT r.*, e.name as equipment_name, e.serial_number, e.image_icon, e.location,
+                   s.register_number, s.department, s.year
             FROM borrow_requests r
             JOIN equipment e ON r.equipment_id = e.id
+            LEFT JOIN students s ON r.student_id = s.user_id
             WHERE 1=1
             """
             params = []
             if user_id:
-                sql += " AND r.user_id = ?"
+                sql += " AND r.student_id = ?"
                 params.append(user_id)
             if status:
                 sql += " AND r.status = ?"
-                params.append(status)
+                params.append(status.upper())
 
             sql += " ORDER BY r.created_at DESC"
             cursor.execute(sql, params)
             reqs = [dict(row) for row in cursor.fetchall()]
             self.send_json_response({"success": True, "data": reqs})
 
+        elif path == "/api/loans":
+            user_id = query_params.get("user_id", [None])[0]
+            status = query_params.get("status", [None])[0]
+
+            sql = """
+            SELECT l.*, e.name as equipment_name, e.serial_number, e.location, e.locker_id,
+                   u.name as student_name, s.register_number, s.department
+            FROM loans l
+            JOIN equipment e ON l.equipment_id = e.id
+            JOIN users u ON l.student_id = u.id
+            LEFT JOIN students s ON l.student_id = s.user_id
+            WHERE 1=1
+            """
+            params = []
+            if user_id:
+                sql += " AND l.student_id = ?"
+                params.append(user_id)
+            if status:
+                sql += " AND l.status = ?"
+                params.append(status.upper())
+
+            sql += " ORDER BY l.issued_at DESC"
+            cursor.execute(sql, params)
+            loans_list = [dict(row) for row in cursor.fetchall()]
+            self.send_json_response({"success": True, "data": loans_list})
+
         elif path == "/api/analytics":
             cursor.execute("SELECT COUNT(*) FROM equipment")
             total = cursor.fetchone()[0]
 
-            cursor.execute("SELECT COUNT(*) FROM equipment WHERE status = 'Available'")
+            cursor.execute("SELECT COUNT(*) FROM equipment WHERE status = 'AVAILABLE'")
             available = cursor.fetchone()[0]
 
-            cursor.execute("SELECT COUNT(*) FROM equipment WHERE status = 'Borrowed'")
-            borrowed = cursor.fetchone()[0]
+            cursor.execute("SELECT COUNT(*) FROM loans WHERE status = 'ACTIVE'")
+            active_loans = cursor.fetchone()[0]
 
-            cursor.execute("SELECT COUNT(*) FROM equipment WHERE status = 'Maintenance'")
-            maintenance = cursor.fetchone()[0]
-
-            cursor.execute("SELECT COUNT(*) FROM borrow_requests WHERE status = 'Pending'")
+            cursor.execute("SELECT COUNT(*) FROM borrow_requests WHERE status = 'PENDING'")
             pending = cursor.fetchone()[0]
 
-            cursor.execute("SELECT COUNT(*) FROM borrow_requests WHERE status = 'Overdue'")
+            cursor.execute("SELECT COUNT(*) FROM equipment WHERE status = 'MAINTENANCE'")
+            maintenance = cursor.fetchone()[0]
+
+            # Overdue loan check
+            now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            cursor.execute("SELECT COUNT(*) FROM loans WHERE status = 'ACTIVE' AND due_at < ?", (now_str,))
             overdue = cursor.fetchone()[0]
 
-            cursor.execute("SELECT category, COUNT(*) as count FROM equipment GROUP BY category")
+            cursor.execute("SELECT c.category_name, COUNT(e.id) as count FROM categories c LEFT JOIN equipment e ON c.category_id = e.category_id GROUP BY c.category_id")
             categories = [dict(row) for row in cursor.fetchall()]
 
-            cursor.execute("SELECT * FROM audit_logs ORDER BY id DESC LIMIT 15")
+            cursor.execute("SELECT * FROM audit_logs ORDER BY log_id DESC LIMIT 15")
             logs = [dict(row) for row in cursor.fetchall()]
 
             self.send_json_response({
                 "success": True,
                 "metrics": {
-                    "total_equipment": total,
-                    "available": available,
-                    "borrowed": borrowed,
-                    "maintenance": maintenance,
+                    "total_inventory": total,
+                    "available_now": available,
+                    "active_loans": active_loans,
                     "pending_approvals": pending,
+                    "in_maintenance": maintenance,
                     "overdue": overdue
                 },
                 "categories": categories,
                 "recent_logs": logs
             })
 
+        elif path == "/api/maintenance":
+            role = self.get_auth_role()
+            if role != "ADMIN":
+                conn.close()
+                self.send_json_response({"error": "BR-09: Authorization failed. Admin access required."}, 403)
+                return
+
+            cursor.execute("""
+            SELECT m.*, e.name as equipment_name, e.serial_number, e.location, u.name as reporter_name
+            FROM maintenance m
+            JOIN equipment e ON m.equipment_id = e.id
+            LEFT JOIN users u ON m.reported_by = u.id
+            ORDER BY m.reported_at DESC
+            """)
+            items = [dict(row) for row in cursor.fetchall()]
+            self.send_json_response({"success": True, "data": items})
+
         elif path == "/api/audit-logs":
-            cursor.execute("SELECT * FROM audit_logs ORDER BY id DESC LIMIT 50")
+            role = self.get_auth_role()
+            if role != "ADMIN":
+                conn.close()
+                self.send_json_response({"error": "BR-09: Authorization failed. Admin access required."}, 403)
+                return
+
+            cursor.execute("SELECT * FROM audit_logs ORDER BY log_id DESC LIMIT 50")
             logs = [dict(row) for row in cursor.fetchall()]
             self.send_json_response({"success": True, "data": logs})
 
@@ -338,99 +444,184 @@ class SmartCampusRequestHandler(BaseHTTPRequestHandler):
         conn = get_db()
         cursor = conn.cursor()
 
-        if path == "/api/borrow-requests":
+        role = self.get_auth_role()
+        auth_user_id = self.get_auth_user_id()
+
+        # Registration API
+        if path == "/api/auth/register":
+            name = body.get("name", "").strip()
+            email = body.get("email", "").strip()
+            reg_num = body.get("register_number", "").strip()
+            dept = body.get("department", "CSE").strip()
+            year = int(body.get("year", 4))
+            sem = int(body.get("semester", 7))
+            sec = body.get("section", "A").strip()
+            phone = body.get("phone", "").strip()
+
+            if not name or not email or not reg_num:
+                conn.close()
+                self.send_json_response({"error": "Missing required registration details"}, 400)
+                return
+
+            import uuid
+            user_id = f"STU-{uuid.uuid4().hex[:6].upper()}"
+            now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            try:
+                cursor.execute("""
+                INSERT INTO users (id, name, email, password_hash, role, is_active, created_at)
+                VALUES (?, ?, ?, 'pbkdf2:sha256:student_hash', 'STUDENT', 1, ?)
+                """, (user_id, name, email, now_str))
+
+                cursor.execute("""
+                INSERT INTO students (student_id, user_id, register_number, department, year, semester, section, phone)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """, (f"S-{user_id[4:]}", user_id, reg_num, dept, year, sem, sec, phone))
+
+                cursor.execute("""
+                INSERT INTO audit_logs (user_id, action, entity_type, entity_id, timestamp, details)
+                VALUES (?, 'STUDENT_REGISTER', 'STUDENT', ?, ?, ?)
+                """, (user_id, user_id, now_str, f"Registered student {name} ({reg_num}, Dept: {dept})"))
+
+                conn.commit()
+                conn.close()
+
+                self.send_json_response({
+                    "success": True,
+                    "user_id": user_id,
+                    "name": name,
+                    "email": email,
+                    "register_number": reg_num,
+                    "message": f"Welcome {name}! Registration successful."
+                })
+                return
+            except sqlite3.IntegrityError as e:
+                conn.close()
+                self.send_json_response({"error": "Email or Register Number already exists."}, 400)
+                return
+
+        # Borrow Request Submission (BR-01 to BR-12)
+        elif path == "/api/borrow-requests":
+            if role != "STUDENT" and role != "ADMIN":
+                conn.close()
+                self.send_json_response({"error": "BR-01: Only registered students can submit requests."}, 403)
+                return
+
             equipment_id = body.get("equipment_id")
-            user_id = body.get("user_id", "STU-88210")
-            user_name = body.get("user_name", "Alex Rivera")
-            user_email = body.get("user_email", "arivera@campus.edu")
+            user_id = body.get("user_id") or auth_user_id
+            user_name = body.get("user_name", "Student")
             borrow_date_str = body.get("borrow_date")
-            return_date_str = body.get("return_date")
+            expected_return_str = body.get("expected_return_date") or body.get("return_date")
             purpose = body.get("purpose", "").strip()
 
-            if equipment_id is None or not borrow_date_str or not return_date_str or not purpose:
+            if equipment_id is None or not borrow_date_str or not expected_return_str or not purpose:
                 conn.close()
-                self.send_json_response({"error": "BR-09: Missing required fields (equipment_id, dates, or purpose)"}, 400)
+                self.send_json_response({"error": "Missing required fields (equipment_id, dates, or purpose)"}, 400)
                 return
 
             try:
                 borrow_dt = datetime.datetime.strptime(borrow_date_str.replace("T", " ")[:16], "%Y-%m-%d %H:%M")
-                return_dt = datetime.datetime.strptime(return_date_str.replace("T", " ")[:16], "%Y-%m-%d %H:%M")
+                return_dt = datetime.datetime.strptime(expected_return_str.replace("T", " ")[:16], "%Y-%m-%d %H:%M")
             except ValueError:
                 conn.close()
-                self.send_json_response({"error": "BR-09: Invalid date format"}, 400)
+                self.send_json_response({"error": "Invalid date format. Use YYYY-MM-DD HH:MM"}, 400)
                 return
 
+            # BR-02: User exists check
+            cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+            user = cursor.fetchone()
+            if not user:
+                conn.close()
+                self.send_json_response({"error": "BR-01: Only registered students can submit requests."}, 400)
+                return
+
+            # BR-03, BR-10, BR-11: Equipment check
             cursor.execute("SELECT * FROM equipment WHERE id = ?", (equipment_id,))
             eq = cursor.fetchone()
             if not eq:
                 conn.close()
-                self.send_json_response({"error": "BR-09: Equipment ID does not exist"}, 404)
+                self.send_json_response({"error": "Equipment ID does not exist."}, 404)
+                return
+
+            if eq["status"] == "MAINTENANCE":
+                conn.close()
+                self.send_json_response({"error": "BR-10: Equipment is under MAINTENANCE and cannot be requested."}, 400)
+                return
+
+            if eq["status"] == "RETIRED":
+                conn.close()
+                self.send_json_response({"error": "BR-11: Retired equipment cannot be requested."}, 400)
                 return
 
             now = datetime.datetime.now()
 
-            if eq["status"] == "Maintenance":
-                conn.close()
-                self.send_json_response({"error": "BR-01: Equipment is under maintenance and unavailable"}, 400)
-                return
-
+            # BR-04: Past borrow date check
             if borrow_dt < (now - datetime.timedelta(minutes=15)):
                 conn.close()
-                self.send_json_response({"error": "BR-02: Borrow date cannot be in the past"}, 400)
+                self.send_json_response({"error": "BR-04: Borrow date cannot be in the past."}, 400)
                 return
 
+            # BR-05: Return date after borrow date
             if return_dt <= borrow_dt:
                 conn.close()
-                self.send_json_response({"error": "BR-03: Return date must be strictly after borrow date"}, 400)
+                self.send_json_response({"error": "BR-05: Expected return date must be strictly after borrow date."}, 400)
                 return
 
-            cursor.execute("SELECT COUNT(*) FROM borrow_requests WHERE user_id = ? AND status = 'Overdue'", (user_id,))
+            # BR-07: Overdue student check
+            now_str = now.strftime("%Y-%m-%d %H:%M:%S")
+            cursor.execute("SELECT COUNT(*) FROM loans WHERE student_id = ? AND status = 'ACTIVE' AND due_at < ?", (user_id, now_str))
             if cursor.fetchone()[0] > 0:
                 conn.close()
-                self.send_json_response({"error": "BR-06: Student has overdue equipment borrowings. Clear overdue items before borrowing new equipment."}, 400)
+                self.send_json_response({"error": "BR-07: Student has overdue equipment borrowings. Please return overdue items first."}, 400)
                 return
 
-            cursor.execute("SELECT COUNT(*) FROM borrow_requests WHERE user_id = ? AND status IN ('Pending', 'Approved', 'CheckedOut')", (user_id,))
-            active_count = cursor.fetchone()[0]
-            if active_count >= MAX_ACTIVE_BORROWINGS:
+            # BR-06: 2 Active Loans limit check
+            cursor.execute("SELECT COUNT(*) FROM loans WHERE student_id = ? AND status = 'ACTIVE'", (user_id,))
+            active_loans_count = cursor.fetchone()[0]
+
+            cursor.execute("SELECT COUNT(*) FROM borrow_requests WHERE student_id = ? AND status IN ('PENDING', 'APPROVED')", (user_id,))
+            active_req_count = cursor.fetchone()[0]
+
+            if (active_loans_count + active_req_count) >= MAX_ACTIVE_LOANS:
                 conn.close()
-                self.send_json_response({"error": f"BR-05: Borrowing limit exceeded. Maximum allowed active borrowings is {MAX_ACTIVE_BORROWINGS}. Current active: {active_count}."}, 400)
+                self.send_json_response({"error": f"BR-06: Borrowing limit reached. Maximum allowed active borrowings is {MAX_ACTIVE_LOANS}."}, 400)
                 return
 
-            cursor.execute("SELECT * FROM borrow_requests WHERE equipment_id = ? AND status IN ('Pending', 'Approved', 'CheckedOut')", (equipment_id,))
+            # BR-08, BR-12: Overlapping bookings check
+            cursor.execute("SELECT * FROM borrow_requests WHERE equipment_id = ? AND status IN ('PENDING', 'APPROVED')", (equipment_id,))
             existing_reqs = cursor.fetchall()
 
             for req in existing_reqs:
                 ex_borrow = datetime.datetime.strptime(req["borrow_date"][:16], "%Y-%m-%d %H:%M")
-                ex_return = datetime.datetime.strptime(req["return_date"][:16], "%Y-%m-%d %H:%M")
+                ex_return = datetime.datetime.strptime(req["expected_return_date"][:16], "%Y-%m-%d %H:%M")
 
-                if req["user_id"] == user_id:
+                if req["student_id"] == user_id:
                     conn.close()
-                    self.send_json_response({"error": "BR-10: You already have an active or pending request for this equipment."}, 400)
+                    self.send_json_response({"error": "BR-08: You already have an active request for this equipment."}, 400)
                     return
 
                 if not (return_dt <= ex_borrow or borrow_dt >= ex_return):
                     conn.close()
-                    self.send_json_response({"error": f"BR-04: Equipment is already booked for an overlapping period."}, 400)
+                    self.send_json_response({"error": "BR-12: Equipment is already booked for an overlapping period."}, 400)
                     return
 
             import uuid
             req_id = f"REQ-{uuid.uuid4().hex[:8].upper()}"
             qr_token = f"QR-{req_id}-{user_id}"
-            initial_status = "Pending" if eq["requires_approval"] else "Approved"
+            initial_status = "PENDING" if eq["requires_approval"] else "APPROVED"
 
             cursor.execute("""
-            INSERT INTO borrow_requests (id, equipment_id, user_id, user_name, user_email, borrow_date, return_date, purpose, status, qr_code_token, pickup_locker, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (req_id, equipment_id, user_id, user_name, user_email, borrow_date_str.replace("T", " "), return_date_str.replace("T", " "), purpose, initial_status, qr_token, eq["locker_id"], now.strftime("%Y-%m-%d %H:%M:%S")))
+            INSERT INTO borrow_requests (id, student_id, equipment_id, borrow_date, expected_return_date, purpose, status, qr_code_token, pickup_locker, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (req_id, user_id, equipment_id, borrow_date_str.replace("T", " "), expected_return_str.replace("T", " "), purpose, initial_status, qr_token, eq["locker_id"], now_str, now_str))
 
-            if initial_status == "Approved":
-                cursor.execute("UPDATE equipment SET status = 'Reserved' WHERE id = ?", (equipment_id,))
+            if initial_status == "APPROVED":
+                cursor.execute("UPDATE equipment SET status = 'RESERVED', updated_at = ? WHERE id = ?", (now_str, equipment_id))
 
             cursor.execute("""
-            INSERT INTO audit_logs (action, user_info, details, timestamp)
-            VALUES (?, ?, ?, ?)
-            """, ("CREATE_REQUEST", f"{user_name} ({user_id})", f"Borrow request {req_id} for '{eq['name']}'. Status: {initial_status}", now.strftime("%Y-%m-%d %H:%M:%S")))
+            INSERT INTO audit_logs (user_id, action, entity_type, entity_id, timestamp, details)
+            VALUES (?, 'SUBMIT_REQUEST', 'BORROW_REQUEST', ?, ?, ?)
+            """, (user_id, req_id, now_str, f"Submitted request {req_id} for equipment '{eq['name']}'. Status: {initial_status}"))
 
             conn.commit()
             conn.close()
@@ -441,40 +632,52 @@ class SmartCampusRequestHandler(BaseHTTPRequestHandler):
                 "status": initial_status,
                 "qr_code_token": qr_token,
                 "pickup_locker": eq["locker_id"],
-                "message": "Borrow request submitted for Admin approval." if initial_status == "Pending" else "Borrow request approved! Locker ready for pickup."
+                "message": "Borrow request submitted for Admin approval." if initial_status == "PENDING" else "Borrow request approved automatically!"
             })
 
+        # Add Equipment (BR-09, BR-13, BR-20)
         elif path == "/api/equipment":
-            role = self.headers.get("X-User-Role", "student")
-            if role != "admin":
+            if role != "ADMIN":
                 conn.close()
-                self.send_json_response({"error": "BR-07: Authorization failed. Only Administrators can add equipment."}, 403)
+                self.send_json_response({"error": "BR-09: Authorization failed. Only Admin can add equipment."}, 403)
                 return
 
-            name = body.get("name")
-            category = body.get("category")
+            name = body.get("name", "").strip()
+            cat_id = body.get("category_id", 1)
+            serial = body.get("serial_number", "").strip() or f"SN-{cat_id}-{int(datetime.datetime.now().timestamp()) % 10000}"
             specs = body.get("specifications", "")
-            serial = body.get("serial_number") or f"SN-{category[:3].upper()}-{int(datetime.datetime.now().timestamp()) % 10000}"
             location = body.get("location", "Main Lab")
-            locker_id = body.get("locker_id", "A-01")
-            requires_approval = 1 if body.get("requires_approval") else 0
-            image_icon = body.get("image_icon", "box")
+            locker = body.get("locker_id", "A-01")
+            requires_appr = 1 if body.get("requires_approval") else 0
+            icon = body.get("image_icon", "box")
 
-            cursor.execute("""
-            INSERT INTO equipment (name, category, specifications, serial_number, location, status, condition, battery_level, locker_id, requires_approval, image_icon)
-            VALUES (?, ?, ?, ?, ?, 'Available', 'Excellent', 100, ?, ?, ?)
-            """, (name, category, specs, serial, location, locker_id, requires_approval, image_icon))
+            if not name:
+                conn.close()
+                self.send_json_response({"error": "Equipment name is required."}, 400)
+                return
 
-            eq_id = cursor.lastrowid
-            cursor.execute("""
-            INSERT INTO audit_logs (action, user_info, details, timestamp)
-            VALUES (?, ?, ?, ?)
-            """, ("ADD_EQUIPMENT", "Lab Admin", f"Added '{name}' (ID: {eq_id}) in Locker {locker_id}", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+            now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-            conn.commit()
-            conn.close()
-            self.send_json_response({"success": True, "id": eq_id, "message": "Equipment added successfully!"})
+            try:
+                cursor.execute("""
+                INSERT INTO equipment (category_id, name, serial_number, description, specifications, location, condition, status, purchase_date, locker_id, requires_approval, image_icon, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, 'GOOD', 'AVAILABLE', ?, ?, ?, ?, ?, ?)
+                """, (cat_id, name, serial, specs, specs, location, now_str[:10], locker, requires_appr, icon, now_str, now_str))
 
+                eq_id = cursor.lastrowid
+                cursor.execute("""
+                INSERT INTO audit_logs (user_id, action, entity_type, entity_id, timestamp, details)
+                VALUES (?, 'ADD_EQUIPMENT', 'EQUIPMENT', ?, ?, ?)
+                """, (auth_user_id, str(eq_id), now_str, f"Admin added '{name}' (SN: {serial}) in Locker {locker}"))
+
+                conn.commit()
+                conn.close()
+                self.send_json_response({"success": True, "id": eq_id, "message": "New equipment registered successfully!"})
+            except sqlite3.IntegrityError:
+                conn.close()
+                self.send_json_response({"error": "BR-13: Serial number must be unique across all equipment."}, 400)
+
+        # Locker Actuator / Quick Issue API
         elif path == "/api/locker/unlock":
             token = body.get("qr_code_token")
             user_id = body.get("user_id")
@@ -490,7 +693,7 @@ class SmartCampusRequestHandler(BaseHTTPRequestHandler):
                 sql += " AND r.qr_code_token = ?"
                 params.append(token)
             elif user_id:
-                sql += " AND r.user_id = ? AND r.status IN ('Approved', 'CheckedOut')"
+                sql += " AND r.student_id = ? AND r.status IN ('APPROVED', 'CHECKEDOUT')"
                 params.append(user_id)
             else:
                 conn.close()
@@ -506,14 +709,24 @@ class SmartCampusRequestHandler(BaseHTTPRequestHandler):
                 return
 
             req = dict(req)
-            if req["status"] == "Approved":
-                cursor.execute("UPDATE borrow_requests SET status = 'CheckedOut' WHERE id = ?", (req["id"],))
-                cursor.execute("UPDATE equipment SET status = 'Borrowed' WHERE id = ?", (req["equipment_id"],))
+            now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            if req["status"] == "APPROVED":
+                import uuid
+                loan_id = f"LOAN-{uuid.uuid4().hex[:6].upper()}"
 
                 cursor.execute("""
-                INSERT INTO audit_logs (action, user_info, details, timestamp)
-                VALUES (?, ?, ?, ?)
-                """, ("IOT_PICKUP", req["user_name"], f"Unlocked Locker {req['locker_id']} - Equipment '{req['equipment_name']}' picked up.", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+                INSERT INTO loans (loan_id, request_id, student_id, equipment_id, issued_at, due_at, status, issued_by)
+                VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE', 'ADM-00001')
+                """, (loan_id, req["id"], req["student_id"], req["equipment_id"], now_str, req["expected_return_date"]))
+
+                cursor.execute("UPDATE borrow_requests SET status = 'CHECKEDOUT', updated_at = ? WHERE id = ?", (now_str, req["id"]))
+                cursor.execute("UPDATE equipment SET status = 'BORROWED', updated_at = ? WHERE id = ?", (now_str, req["equipment_id"]))
+
+                cursor.execute("""
+                INSERT INTO audit_logs (user_id, action, entity_type, entity_id, timestamp, details)
+                VALUES (?, 'IOT_PICKUP', 'LOAN', ?, ?, ?)
+                """, (req["student_id"], loan_id, now_str, f"Unlocked Locker {req['locker_id']} - Equipment '{req['equipment_name']}' issued."))
 
                 conn.commit()
                 conn.close()
@@ -525,32 +738,9 @@ class SmartCampusRequestHandler(BaseHTTPRequestHandler):
                     "message": f"Locker {req['locker_id']} Unlocked! Please collect your {req['equipment_name']}."
                 })
 
-            elif req["status"] == "CheckedOut":
-                cursor.execute("UPDATE borrow_requests SET status = 'Returned' WHERE id = ?", (req["id"],))
-                cursor.execute("UPDATE equipment SET status = 'Available' WHERE id = ?", (req["equipment_id"],))
-
-                cursor.execute("""
-                INSERT INTO returns (request_id, returned_at, condition, remarks)
-                VALUES (?, ?, 'Good', 'Returned via Smart Locker')
-                """, (req["id"], datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-
-                cursor.execute("""
-                INSERT INTO audit_logs (action, user_info, details, timestamp)
-                VALUES (?, ?, ?, ?)
-                """, ("IOT_RETURN", req["user_name"], f"Unlocked Locker {req['locker_id']} - Equipment '{req['equipment_name']}' returned. Status reset to Available.", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-
-                conn.commit()
-                conn.close()
-                self.send_json_response({
-                    "success": True,
-                    "action": "RETURN",
-                    "locker_id": req["locker_id"],
-                    "equipment_name": req["equipment_name"],
-                    "message": f"Locker {req['locker_id']} Unlocked! Equipment returned successfully. Status reset to Available."
-                })
             else:
                 conn.close()
-                self.send_json_response({"error": f"Request state is '{req['status']}'. Cannot perform locker action."}, 400)
+                self.send_json_response({"error": f"Request status '{req['status']}' is not ready for pickup."}, 400)
 
         else:
             conn.close()
@@ -567,15 +757,18 @@ class SmartCampusRequestHandler(BaseHTTPRequestHandler):
         conn = get_db()
         cursor = conn.cursor()
 
-        role = self.headers.get("X-User-Role", "student")
+        role = self.get_auth_role()
+        auth_user_id = self.get_auth_user_id()
+        now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        if path.startswith("/api/borrow-requests/") and path.endswith("/approve"):
-            if role != "admin":
+        # Admin Approve Request (BR-16, BR-20)
+        if path.startswith("/api/admin/requests/") and path.endswith("/approve"):
+            if role != "ADMIN":
                 conn.close()
-                self.send_json_response({"error": "BR-07: Authorization failed. Only Administrators can approve requests."}, 403)
+                self.send_json_response({"error": "BR-16: Only Admin can approve borrow requests."}, 403)
                 return
 
-            req_id = path.split("/")[3]
+            req_id = path.split("/")[4]
             cursor.execute("SELECT * FROM borrow_requests WHERE id = ?", (req_id,))
             req = cursor.fetchone()
             if not req:
@@ -583,26 +776,45 @@ class SmartCampusRequestHandler(BaseHTTPRequestHandler):
                 self.send_json_response({"error": "Borrow request not found"}, 404)
                 return
 
-            cursor.execute("UPDATE borrow_requests SET status = 'Approved' WHERE id = ?", (req_id,))
-            cursor.execute("UPDATE equipment SET status = 'Reserved' WHERE id = ?", (req["equipment_id"],))
+            cursor.execute("UPDATE borrow_requests SET status = 'APPROVED', approved_by = ?, updated_at = ? WHERE id = ?", (auth_user_id, now_str, req_id))
+            cursor.execute("UPDATE equipment SET status = 'RESERVED', updated_at = ? WHERE id = ?", (now_str, req["equipment_id"]))
+
+            # Auto create loan record if not exists
+            cursor.execute("SELECT * FROM loans WHERE request_id = ?", (req_id,))
+            loan_row = cursor.fetchone()
+            if not loan_row:
+                import uuid
+                loan_id = f"LOAN-{uuid.uuid4().hex[:6].upper()}"
+                cursor.execute("""
+                INSERT INTO loans (loan_id, request_id, student_id, equipment_id, issued_at, due_at, status, issued_by)
+                VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE', ?)
+                """, (loan_id, req_id, req["student_id"], req["equipment_id"], now_str, req["expected_return_date"], auth_user_id))
+            else:
+                loan_id = loan_row["loan_id"]
 
             cursor.execute("""
-            INSERT INTO audit_logs (action, user_info, details, timestamp)
-            VALUES (?, ?, ?, ?)
-            """, ("ADMIN_APPROVE", "Lab Admin", f"Approved request {req_id} for student {req['user_id']}", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+            INSERT INTO audit_logs (user_id, action, entity_type, entity_id, timestamp, details)
+            VALUES (?, 'ADMIN_APPROVE', 'BORROW_REQUEST', ?, ?, ?)
+            """, (auth_user_id, req_id, now_str, f"Admin approved request {req_id}. Active Loan {loan_id} issued."))
 
             conn.commit()
             conn.close()
-            self.send_json_response({"success": True, "message": f"Request {req_id} approved."})
+            self.send_json_response({"success": True, "message": f"Borrow request {req_id} approved. Equipment reserved!"})
 
-        elif path.startswith("/api/borrow-requests/") and path.endswith("/reject"):
-            if role != "admin":
+        # Admin Reject Request (BR-17, BR-18, BR-20)
+        elif path.startswith("/api/admin/requests/") and path.endswith("/reject"):
+            if role != "ADMIN":
                 conn.close()
-                self.send_json_response({"error": "BR-07: Authorization failed. Only Administrators can reject requests."}, 403)
+                self.send_json_response({"error": "BR-17: Only Admin can reject borrow requests."}, 403)
                 return
 
-            req_id = path.split("/")[3]
-            reason = body.get("reason", "Not specified by Admin")
+            req_id = path.split("/")[4]
+            reason = body.get("reason", "").strip()
+
+            if not reason:
+                conn.close()
+                self.send_json_response({"error": "BR-18: Admin must provide a mandatory rejection reason."}, 400)
+                return
 
             cursor.execute("SELECT * FROM borrow_requests WHERE id = ?", (req_id,))
             req = cursor.fetchone()
@@ -611,65 +823,101 @@ class SmartCampusRequestHandler(BaseHTTPRequestHandler):
                 self.send_json_response({"error": "Borrow request not found"}, 404)
                 return
 
-            cursor.execute("UPDATE borrow_requests SET status = 'Rejected', rejection_reason = ? WHERE id = ?", (reason, req_id))
-            cursor.execute("UPDATE equipment SET status = 'Available' WHERE id = ?", (req["equipment_id"],))
+            cursor.execute("UPDATE borrow_requests SET status = 'REJECTED', rejection_reason = ?, updated_at = ? WHERE id = ?", (reason, now_str, req_id))
+            cursor.execute("UPDATE equipment SET status = 'AVAILABLE', updated_at = ? WHERE id = ?", (now_str, req["equipment_id"]))
 
             cursor.execute("""
-            INSERT INTO audit_logs (action, user_info, details, timestamp)
-            VALUES (?, ?, ?, ?)
-            """, ("ADMIN_REJECT", "Lab Admin", f"Rejected request {req_id}. Reason: {reason}", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+            INSERT INTO audit_logs (user_id, action, entity_type, entity_id, timestamp, details)
+            VALUES (?, 'ADMIN_REJECT', 'BORROW_REQUEST', ?, ?, ?)
+            """, (auth_user_id, req_id, now_str, f"Admin rejected request {req_id}. Reason: {reason}"))
 
             conn.commit()
             conn.close()
-            self.send_json_response({"success": True, "message": f"Request {req_id} rejected."})
+            self.send_json_response({"success": True, "message": f"Borrow request {req_id} rejected."})
 
-        elif path.startswith("/api/borrow-requests/") and path.endswith("/return"):
-            req_id = path.split("/")[3]
-            cond = body.get("condition", "Good")
-            remarks = body.get("remarks", "Returned at lab desk")
+        # Admin Return Processing (BR-14, BR-15, BR-19, BR-20)
+        elif path.startswith("/api/admin/loans/") and path.endswith("/return"):
+            loan_id = path.split("/")[4]
+            cond = body.get("condition", "GOOD").upper()
+            missing = body.get("missing_accessories", "").strip()
+            damage_desc = body.get("damage_description", "").strip()
+            remarks = body.get("remarks", "Returned at lab desk").strip()
 
-            cursor.execute("SELECT * FROM borrow_requests WHERE id = ?", (req_id,))
-            req = cursor.fetchone()
-            if not req:
+            cursor.execute("SELECT * FROM loans WHERE loan_id = ?", (loan_id,))
+            loan = cursor.fetchone()
+            if not loan:
                 conn.close()
-                self.send_json_response({"error": "Borrow request not found"}, 404)
+                self.send_json_response({"error": "Loan record not found"}, 404)
                 return
 
-            cursor.execute("UPDATE borrow_requests SET status = 'Returned' WHERE id = ?", (req_id,))
-            cursor.execute("UPDATE equipment SET status = 'Available', condition = ? WHERE id = ?", (cond, req["equipment_id"]))
+            cursor.execute("UPDATE loans SET status = 'RETURNED', returned_at = ? WHERE loan_id = ?", (now_str, loan_id))
+
+            # Record Return details
+            cursor.execute("""
+            INSERT INTO returns (loan_id, returned_at, condition, missing_accessories, damage_description, remarks, processed_by)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (loan_id, now_str, cond, missing, damage_desc, remarks, auth_user_id))
+
+            # BR-14 & BR-15 Condition check routing
+            if cond in ("MINOR_DAMAGE", "MAJOR_DAMAGE", "MISSING_PARTS"):
+                # Transition to MAINTENANCE (BR-14)
+                cursor.execute("UPDATE equipment SET status = 'MAINTENANCE', condition = ?, updated_at = ? WHERE id = ?", (cond, now_str, loan["equipment_id"]))
+
+                issue_text = f"Damage on return: {damage_desc or cond}. Missing: {missing or 'None'}"
+                cursor.execute("""
+                INSERT INTO maintenance (equipment_id, issue, reported_at, reported_by, status)
+                VALUES (?, ?, ?, ?, 'REPORTED')
+                """, (loan["equipment_id"], issue_text, now_str, auth_user_id))
+
+                log_details = f"Processed return for Loan {loan_id}. Condition: {cond}. Equipment transitioned to MAINTENANCE."
+
+            else:
+                # BR-15 Reset to AVAILABLE
+                cursor.execute("UPDATE equipment SET status = 'AVAILABLE', condition = ?, updated_at = ? WHERE id = ?", (cond, now_str, loan["equipment_id"]))
+                log_details = f"Processed return for Loan {loan_id}. Condition: {cond}. Equipment reset to AVAILABLE."
 
             cursor.execute("""
-            INSERT INTO returns (request_id, returned_at, condition, remarks)
-            VALUES (?, ?, ?, ?)
-            """, (req_id, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), cond, remarks))
-
-            cursor.execute("""
-            INSERT INTO audit_logs (action, user_info, details, timestamp)
-            VALUES (?, ?, ?, ?)
-            """, ("RETURN_RECORDED", "Lab Staff", f"Recorded return for request {req_id}. Status set to Available.", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+            INSERT INTO audit_logs (user_id, action, entity_type, entity_id, timestamp, details)
+            VALUES (?, 'PROCESS_RETURN', 'LOAN', ?, ?, ?)
+            """, (auth_user_id, loan_id, now_str, log_details))
 
             conn.commit()
             conn.close()
-            self.send_json_response({"success": True, "message": f"Request {req_id} returned. Equipment is now Available."})
+            self.send_json_response({"success": True, "message": log_details})
 
-        elif path.startswith("/api/equipment/") and path.endswith("/maintenance"):
-            if role != "admin":
+        # Admin Maintenance Pipeline Update
+        elif path.startswith("/api/admin/maintenance/") and (path.endswith("/progress") or path.endswith("/complete")):
+            if role != "ADMIN":
                 conn.close()
-                self.send_json_response({"error": "BR-07: Authorization failed. Admin only."}, 403)
+                self.send_json_response({"error": "BR-09: Authorization failed. Admin access required."}, 403)
                 return
 
-            eq_id = path.split("/")[3]
-            maint_status = body.get("status", "Maintenance")
+            maint_id = path.split("/")[4]
+            resolution = body.get("resolution", "Repaired and recalibrated").strip()
 
-            cursor.execute("UPDATE equipment SET status = ? WHERE id = ?", (maint_status, eq_id))
+            cursor.execute("SELECT * FROM maintenance WHERE maintenance_id = ?", (maint_id,))
+            m = cursor.fetchone()
+            if not m:
+                conn.close()
+                self.send_json_response({"error": "Maintenance item not found"}, 404)
+                return
+
+            if path.endswith("/complete"):
+                cursor.execute("UPDATE maintenance SET status = 'COMPLETED', resolution = ?, completed_at = ? WHERE maintenance_id = ?", (resolution, now_str, maint_id))
+                cursor.execute("UPDATE equipment SET status = 'AVAILABLE', condition = 'GOOD', updated_at = ? WHERE id = ?", (now_str, m["equipment_id"]))
+                msg = f"Maintenance ticket #{maint_id} completed! Equipment is back AVAILABLE."
+            else:
+                cursor.execute("UPDATE maintenance SET status = 'IN_PROGRESS', resolution = ? WHERE maintenance_id = ?", (resolution, maint_id))
+                msg = f"Maintenance ticket #{maint_id} set to IN_PROGRESS."
+
             cursor.execute("""
-            INSERT INTO audit_logs (action, user_info, details, timestamp)
-            VALUES (?, ?, ?, ?)
-            """, ("MAINTENANCE_TOGGLE", "Lab Admin", f"Equipment ID {eq_id} status changed to {maint_status}", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+            INSERT INTO audit_logs (user_id, action, entity_type, entity_id, timestamp, details)
+            VALUES (?, 'MAINTENANCE_UPDATE', 'MAINTENANCE', ?, ?, ?)
+            """, (auth_user_id, str(maint_id), now_str, msg))
 
             conn.commit()
             conn.close()
-            self.send_json_response({"success": True, "message": f"Equipment status updated to {maint_status}."})
+            self.send_json_response({"success": True, "message": msg})
 
         else:
             conn.close()
@@ -704,7 +952,7 @@ def run_server():
         return
 
     print("==================================================")
-    print("  Smart Campus Equipment Borrowing System Online  ")
+    print("  SmartCampus EquipBorrow REST API Server Online  ")
     print(f"  Server listening at: http://localhost:{selected_port}   ")
     print("==================================================")
     try:

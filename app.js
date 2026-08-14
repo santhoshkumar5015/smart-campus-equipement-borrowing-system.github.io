@@ -1,30 +1,46 @@
 /**
- * Smart Campus Equipment Borrowing System - Main Client Application Logic
+ * SmartCampus EquipBorrow - Main Client Application Logic
  */
 
 const API_BASE = '/api';
 
 // Global User & Role State
-let currentRole = 'student'; // 'student' or 'admin'
+let currentRole = 'jeeva'; // 'jeeva', 'alex', 'jordan', 'admin'
 let currentCategory = 'All';
 let searchQuery = '';
 let equipmentList = [];
 let myReservations = [];
 
-const USERS = {
-  student: {
+const PROFILES = {
+  jeeva: {
+    id: 'STU-10034',
+    name: 'Jeeva Kumar',
+    email: 'jeeva@college.edu',
+    role: 'STUDENT',
+    avatar: 'JK',
+    subtext: 'RA2311003050340 | CSE 4th Yr'
+  },
+  alex: {
     id: 'STU-88210',
     name: 'Alex Rivera',
-    email: 'arivera@campus.edu',
-    role: 'student',
+    email: 'arivera@college.edu',
+    role: 'STUDENT',
     avatar: 'AR',
-    subtext: 'STU-88210 | Student'
+    subtext: 'RA2311003050112 | ECE 4th Yr'
+  },
+  jordan: {
+    id: 'STU-99012',
+    name: 'Jordan Smith',
+    email: 'jsmith@college.edu',
+    role: 'STUDENT',
+    avatar: 'JS',
+    subtext: 'RA2311003050882 | Robotics 3rd Yr'
   },
   admin: {
     id: 'ADM-00001',
     name: 'Dr. Sarah Vance',
-    email: 'svance@campus.edu',
-    role: 'admin',
+    email: 'svance@college.edu',
+    role: 'ADMIN',
     avatar: 'SV',
     subtext: 'ADM-00001 | Lab Manager'
   }
@@ -38,6 +54,8 @@ document.addEventListener('DOMContentLoaded', () => {
   setupLockerKiosk();
   setupAddEquipmentForm();
   setupRejectForm();
+  setupReturnForm();
+  setupRegisterForm();
 
   // Initial Data Fetch
   refreshAllData();
@@ -45,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Default datetimes
   const now = new Date();
   const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-  const nextWeek = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+  const nextWeek = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000);
 
   const formatIsoLocal = (date) => {
     const tzOffset = date.getTimezoneOffset() * 60000;
@@ -65,25 +83,26 @@ function setupRoleSelector() {
 
   selector.addEventListener('change', (e) => {
     currentRole = e.target.value;
-    const user = USERS[currentRole];
+    const profile = PROFILES[currentRole];
 
-    document.getElementById('userAvatarText').textContent = user.avatar;
-    document.getElementById('userNameText').textContent = user.name;
-    document.getElementById('userRoleSubtext').textContent = user.subtext;
+    document.getElementById('userAvatarText').textContent = profile.avatar;
+    document.getElementById('userNameText').textContent = profile.name;
+    document.getElementById('userRoleSubtext').textContent = profile.subtext;
 
-    document.getElementById('rfidBadgeName').textContent = `Tap ${user.name}'s ID`;
-    document.getElementById('rfidBadgeId').textContent = `RFID ID: ${user.id}`;
+    document.getElementById('rfidBadgeName').textContent = `Tap ${profile.name}'s ID`;
+    document.getElementById('rfidBadgeId').textContent = `RFID: ${profile.id}`;
 
-    showToast(`Switched active view to ${user.name} (${user.role.toUpperCase()})`, 'success');
+    showToast(`Switched active user profile to ${profile.name} (${profile.role})`, 'success');
     refreshAllData();
   });
 }
 
-// Helper to add Role Header to API calls
 function getAuthHeaders() {
+  const profile = PROFILES[currentRole];
   return {
     'Content-Type': 'application/json',
-    'X-User-Role': currentRole
+    'X-User-Role': profile.role,
+    'X-User-Id': profile.id
   };
 }
 
@@ -92,6 +111,10 @@ async function refreshAllData() {
   await fetchMetricsAndAnalytics();
   await fetchEquipmentCatalog();
   await fetchMyLoans();
+  if (PROFILES[currentRole].role === 'ADMIN') {
+    await fetchAdminLoans();
+    await fetchMaintenanceQueue();
+  }
   renderLockersGrid();
 }
 
@@ -158,11 +181,12 @@ async function fetchMetricsAndAnalytics() {
     const json = await res.json();
     if (json.success) {
       const m = json.metrics;
-      document.getElementById('metricTotal').textContent = m.total_equipment;
-      document.getElementById('metricAvailable').textContent = m.available;
-      document.getElementById('metricBorrowed').textContent = m.borrowed;
+      document.getElementById('metricTotal').textContent = m.total_inventory;
+      document.getElementById('metricAvailable').textContent = m.available_now;
+      document.getElementById('metricBorrowed').textContent = m.active_loans;
       document.getElementById('metricPending').textContent = m.pending_approvals;
-      document.getElementById('metricMaintenance').textContent = m.maintenance;
+      document.getElementById('metricMaintenance').textContent = m.in_maintenance;
+      document.getElementById('metricOverdue').textContent = m.overdue;
 
       renderAuditLogs(json.recent_logs);
     }
@@ -173,8 +197,8 @@ async function fetchMetricsAndAnalytics() {
 
 async function fetchMyLoans() {
   try {
-    const user = USERS[currentRole];
-    const url = currentRole === 'admin' ? `${API_BASE}/borrow-requests` : `${API_BASE}/borrow-requests?user_id=${user.id}`;
+    const profile = PROFILES[currentRole];
+    const url = profile.role === 'ADMIN' ? `${API_BASE}/borrow-requests` : `${API_BASE}/borrow-requests?user_id=${profile.id}`;
     
     const res = await fetch(url, { headers: getAuthHeaders() });
     const json = await res.json();
@@ -188,18 +212,42 @@ async function fetchMyLoans() {
   }
 }
 
+async function fetchAdminLoans() {
+  try {
+    const res = await fetch(`${API_BASE}/loans`, { headers: getAuthHeaders() });
+    const json = await res.json();
+    if (json.success) {
+      renderAdminLoansTable(json.data);
+    }
+  } catch (err) {
+    console.error('Admin loans fetch error', err);
+  }
+}
+
+async function fetchMaintenanceQueue() {
+  try {
+    const res = await fetch(`${API_BASE}/maintenance`, { headers: getAuthHeaders() });
+    const json = await res.json();
+    if (json.success) {
+      renderMaintenanceTable(json.data);
+    }
+  } catch (err) {
+    console.error('Maintenance fetch error', err);
+  }
+}
+
 // UI Renderers
 function renderEquipmentCatalog() {
   const grid = document.getElementById('equipmentGrid');
   if (!grid) return;
 
   const filtered = equipmentList.filter(item => {
-    const matchCategory = currentCategory === 'All' || item.category === currentCategory;
+    const matchCategory = currentCategory === 'All' || item.category_name === currentCategory || item.category === currentCategory;
     const matchSearch = !searchQuery || 
       item.name.toLowerCase().includes(searchQuery) ||
-      item.specifications.toLowerCase().includes(searchQuery) ||
-      item.location.toLowerCase().includes(searchQuery) ||
-      item.serial_number.toLowerCase().includes(searchQuery);
+      (item.specifications && item.specifications.toLowerCase().includes(searchQuery)) ||
+      (item.location && item.location.toLowerCase().includes(searchQuery)) ||
+      (item.serial_number && item.serial_number.toLowerCase().includes(searchQuery));
     return matchCategory && matchSearch;
   });
 
@@ -216,7 +264,7 @@ function renderEquipmentCatalog() {
   }
 
   grid.innerHTML = filtered.map(item => {
-    const isAvailable = item.status === 'Available';
+    const isAvailable = item.status === 'AVAILABLE';
     const iconName = item.image_icon || 'box';
 
     return `
@@ -229,9 +277,9 @@ function renderEquipmentCatalog() {
             <span class="status-badge ${item.status}">${item.status}</span>
           </div>
 
-          <div class="equipment-category">${item.category}</div>
+          <div class="equipment-category">${item.category_name || 'Lab Equipment'}</div>
           <h3 class="equipment-title">${escapeHtml(item.name)}</h3>
-          <p class="equipment-specs">${escapeHtml(item.specifications)}</p>
+          <p class="equipment-specs">${escapeHtml(item.specifications || item.description || '')}</p>
 
           <div class="equipment-meta">
             <div class="meta-row">
@@ -239,7 +287,7 @@ function renderEquipmentCatalog() {
               <span><i data-lucide="door-closed"></i> Locker ${item.locker_id}</span>
             </div>
             <div class="meta-row">
-              <span><i data-lucide="battery-charging"></i> ${item.battery_level}% Battery</span>
+              <span><i data-lucide="barcode"></i> SN: ${escapeHtml(item.serial_number)}</span>
               <span><i data-lucide="shield-check"></i> ${item.requires_approval ? 'Admin Approval' : 'Instant Loan'}</span>
             </div>
           </div>
@@ -269,8 +317,8 @@ function renderLockersGrid() {
 
   grid.innerHTML = lockers.map(l => {
     const item = l.eq;
-    const isOccupied = item && item.status !== 'Available';
-    const isBorrowed = item && item.status === 'Borrowed';
+    const isOccupied = item && item.status !== 'AVAILABLE';
+    const isBorrowed = item && item.status === 'BORROWED';
 
     return `
       <div class="locker-door ${isOccupied ? 'occupied' : ''}" id="locker-door-${l.id.replace('-', '')}">
@@ -293,28 +341,27 @@ function renderMyLoansTable() {
   const tbody = document.getElementById('myLoansTableBody');
   if (!tbody) return;
 
-  const activeCount = myReservations.filter(r => ['Pending', 'Approved', 'CheckedOut'].includes(r.status)).length;
+  const activeCount = myReservations.filter(r => ['PENDING', 'APPROVED', 'CHECKEDOUT'].includes(r.status)).length;
   const activeLimitEl = document.getElementById('activeLimitDisplay');
   if (activeLimitEl) {
-    activeLimitEl.textContent = `${activeCount} / 2 Max (BR-05)`;
+    activeLimitEl.textContent = `${activeCount} / 2 Max (BR-06)`;
     activeLimitEl.style.color = activeCount >= 2 ? '#ef4444' : '#60a5fa';
   }
 
   if (myReservations.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">No request history found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">No request history found for current user.</td></tr>`;
     return;
   }
 
   tbody.innerHTML = myReservations.map(r => {
-    const canPass = ['Approved', 'CheckedOut'].includes(r.status);
-    const canReturn = r.status === 'CheckedOut';
+    const canPass = ['APPROVED', 'CHECKEDOUT'].includes(r.status);
 
     return `
       <tr>
         <td style="font-weight: 700; font-family: monospace; color: #60a5fa;">${r.id}</td>
         <td style="font-weight: 600;">${escapeHtml(r.equipment_name)}</td>
-        <td><span class="status-badge Borrowed">${r.pickup_locker}</span></td>
-        <td style="font-size: 0.85rem; color: var(--text-muted);">${r.borrow_date}<br>to ${r.return_date}</td>
+        <td><span class="status-badge BORROWED">${r.pickup_locker}</span></td>
+        <td style="font-size: 0.85rem; color: var(--text-muted);">${r.borrow_date}<br>to ${r.expected_return_date}</td>
         <td style="font-size: 0.85rem; color: var(--text-muted);">${escapeHtml(r.purpose || 'N/A')}</td>
         <td>
           <span class="status-badge ${r.status}">${r.status}</span>
@@ -325,11 +372,6 @@ function renderMyLoansTable() {
             ${canPass ? `
               <button class="btn btn-secondary" style="padding: 0.4rem 0.6rem; font-size: 0.78rem;" onclick="showDigitalPass('${r.id}')">
                 <i data-lucide="qr-code"></i> Pass
-              </button>
-            ` : ''}
-            ${canReturn ? `
-              <button class="btn btn-primary" style="padding: 0.4rem 0.6rem; font-size: 0.78rem; width:auto;" onclick="returnEquipmentDirect('${r.id}')">
-                <i data-lucide="corner-down-left"></i> Return
               </button>
             ` : ''}
           </div>
@@ -345,23 +387,24 @@ function renderPendingApprovals() {
   const tbody = document.getElementById('pendingTableBody');
   if (!tbody) return;
 
-  fetch(`${API_BASE}/borrow-requests`)
+  fetch(`${API_BASE}/borrow-requests`, { headers: getAuthHeaders() })
     .then(r => r.json())
     .then(json => {
       if (!json.success) return;
-      const pendings = json.data.filter(r => r.status === 'Pending');
+      const pendings = json.data.filter(r => r.status === 'PENDING');
 
       if (pendings.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No pending approval requests.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No pending approval requests.</td></tr>`;
         return;
       }
 
       tbody.innerHTML = pendings.map(r => `
         <tr>
           <td style="font-weight: 700; font-family: monospace; color: #fbbf24;">${r.id}</td>
-          <td>${escapeHtml(r.user_name)} (${r.user_id})</td>
+          <td>${escapeHtml(r.student_id)}</td>
+          <td>${r.department || 'CSE'} ${r.register_number ? `(${r.register_number})` : ''}</td>
           <td>${escapeHtml(r.equipment_name)}</td>
-          <td style="font-size: 0.85rem; color: var(--text-muted);">${r.borrow_date} to ${r.return_date}</td>
+          <td style="font-size: 0.85rem; color: var(--text-muted);">${r.borrow_date} to ${r.expected_return_date}</td>
           <td style="font-size: 0.85rem; color: var(--text-muted);">${escapeHtml(r.purpose)}</td>
           <td>
             <div style="display: flex; gap: 0.5rem;">
@@ -380,6 +423,65 @@ function renderPendingApprovals() {
     });
 }
 
+function renderAdminLoansTable(loans) {
+  const tbody = document.getElementById('adminLoansTableBody');
+  if (!tbody) return;
+
+  const activeLoans = loans.filter(l => l.status === 'ACTIVE');
+  if (activeLoans.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No active issued loans.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = activeLoans.map(l => `
+    <tr>
+      <td style="font-weight: 700; font-family: monospace; color: #60a5fa;">${l.loan_id}</td>
+      <td>${escapeHtml(l.student_name)} (${l.student_id})</td>
+      <td>${escapeHtml(l.equipment_name)} (Locker ${l.locker_id})</td>
+      <td style="font-size: 0.85rem; color: var(--text-muted);">${l.issued_at}</td>
+      <td style="font-size: 0.85rem; color: var(--text-muted);">${l.due_at}</td>
+      <td><span class="status-badge ${l.status}">${l.status}</span></td>
+      <td>
+        <button class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; width: auto;" onclick="openReturnModal('${l.loan_id}')">
+          <i data-lucide="corner-down-left"></i> Inspect & Return
+        </button>
+      </td>
+    </tr>
+  `).join('');
+
+  if (window.lucide) window.lucide.createIcons();
+}
+
+function renderMaintenanceTable(maint) {
+  const tbody = document.getElementById('maintenanceTableBody');
+  if (!tbody) return;
+
+  if (maint.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No equipment currently in maintenance.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = maint.map(m => `
+    <tr>
+      <td style="font-weight: 700; font-family: monospace; color: #f87171;">#M-${m.maintenance_id}</td>
+      <td>${escapeHtml(m.equipment_name)}</td>
+      <td style="font-family: monospace; font-size: 0.85rem;">${m.serial_number}</td>
+      <td style="font-size: 0.85rem; color: #f87171;">${escapeHtml(m.issue)}</td>
+      <td style="font-size: 0.85rem; color: var(--text-muted);">${m.reported_at}</td>
+      <td><span class="status-badge MAINTENANCE">${m.status}</span></td>
+      <td>
+        ${m.status !== 'COMPLETED' ? `
+          <button class="btn btn-primary" style="padding: 0.35rem 0.7rem; font-size: 0.78rem; width: auto;" onclick="completeMaintenance(${m.maintenance_id})">
+            <i data-lucide="check-circle"></i> Complete Repair
+          </button>
+        ` : `<span style="color: #34d399; font-size: 0.8rem;">Resolved</span>`}
+      </td>
+    </tr>
+  `).join('');
+
+  if (window.lucide) window.lucide.createIcons();
+}
+
 function renderAuditLogs(logs) {
   const tbody = document.getElementById('auditLogsBody');
   if (!tbody || !logs) return;
@@ -387,8 +489,8 @@ function renderAuditLogs(logs) {
   tbody.innerHTML = logs.map(l => `
     <tr>
       <td style="font-size: 0.8rem; color: var(--text-dim);">${l.timestamp}</td>
-      <td><span class="status-badge Available" style="font-size: 0.7rem;">${l.action}</span></td>
-      <td style="font-weight: 600; font-size: 0.85rem;">${escapeHtml(l.user_info)}</td>
+      <td><span class="status-badge AVAILABLE" style="font-size: 0.7rem;">${l.action}</span></td>
+      <td style="font-weight: 600; font-size: 0.85rem;">${escapeHtml(l.user_id)}</td>
       <td style="font-size: 0.85rem; color: var(--text-muted);">${escapeHtml(l.details)}</td>
     </tr>
   `).join('');
@@ -401,14 +503,13 @@ function setupModals() {
     reserveForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const user = USERS[currentRole];
+      const profile = PROFILES[currentRole];
       const payload = {
         equipment_id: parseInt(document.getElementById('reserveEqId').value),
-        user_id: user.id,
-        user_name: user.name,
-        user_email: document.getElementById('reserveStudentEmail').value,
+        user_id: profile.id,
+        user_name: profile.name,
         borrow_date: document.getElementById('reserveStartDate').value.replace('T', ' '),
-        return_date: document.getElementById('reserveEndDate').value.replace('T', ' '),
+        expected_return_date: document.getElementById('reserveEndDate').value.replace('T', ' '),
         purpose: document.getElementById('reservePurpose').value
       };
 
@@ -431,7 +532,6 @@ function setupModals() {
             }, 400);
           }
         } else {
-          // Display exact Business Rule failure error!
           showToast(json.error || 'Borrow request failed', 'error');
         }
       } catch (err) {
@@ -448,7 +548,7 @@ function openReserveModal(equipmentId) {
   document.getElementById('reserveEqId').value = eq.id;
   document.getElementById('reserveEqName').value = eq.name;
   document.getElementById('reserveLocker').value = `${eq.locker_id} (${eq.location})`;
-  document.getElementById('reserveStudentEmail').value = USERS[currentRole].email;
+  document.getElementById('reserveStudentEmail').value = PROFILES[currentRole].email;
 
   openModal('reserveModal');
 }
@@ -456,13 +556,13 @@ function openReserveModal(equipmentId) {
 // Admin Actions
 async function approveReservation(reqId) {
   try {
-    const res = await fetch(`${API_BASE}/borrow-requests/${reqId}/approve`, {
+    const res = await fetch(`${API_BASE}/admin/requests/${reqId}/approve`, {
       method: 'PUT',
       headers: getAuthHeaders()
     });
     const json = await res.json();
     if (json.success) {
-      showToast(`Borrow request ${reqId} approved!`, 'success');
+      showToast(`Borrow request ${reqId} approved! Active Loan issued.`, 'success');
       refreshAllData();
     } else {
       showToast(json.error || 'Failed to approve', 'error');
@@ -487,7 +587,7 @@ function setupRejectForm() {
     const reason = document.getElementById('rejectReasonInput').value;
 
     try {
-      const res = await fetch(`${API_BASE}/borrow-requests/${reqId}/reject`, {
+      const res = await fetch(`${API_BASE}/admin/requests/${reqId}/reject`, {
         method: 'PUT',
         headers: getAuthHeaders(),
         body: JSON.stringify({ reason })
@@ -506,29 +606,104 @@ function setupRejectForm() {
   });
 }
 
-async function returnEquipmentDirect(reqId) {
+function openReturnModal(loanId) {
+  document.getElementById('returnLoanId').value = loanId;
+  openModal('returnModal');
+}
+
+function setupReturnForm() {
+  const form = document.getElementById('returnForm');
+  if (!form) return;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const loanId = document.getElementById('returnLoanId').value;
+    const payload = {
+      condition: document.getElementById('returnCondition').value,
+      missing_accessories: document.getElementById('returnMissing').value,
+      damage_description: document.getElementById('returnDamageDesc').value
+    };
+
+    try {
+      const res = await fetch(`${API_BASE}/admin/loans/${loanId}/return`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload)
+      });
+      const json = await res.json();
+      if (json.success) {
+        closeModal('returnModal');
+        showToast(json.message, 'success');
+        refreshAllData();
+      } else {
+        showToast(json.error || 'Failed to process return', 'error');
+      }
+    } catch (err) {
+      showToast('Server connection error', 'error');
+    }
+  });
+}
+
+async function completeMaintenance(maintId) {
   try {
-    const res = await fetch(`${API_BASE}/borrow-requests/${reqId}/return`, {
+    const res = await fetch(`${API_BASE}/admin/maintenance/${maintId}/complete`, {
       method: 'PUT',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ condition: 'Good', remarks: 'Returned at lab desk' })
+      body: JSON.stringify({ resolution: 'Repaired and recalibrated by Lab Technician' })
     });
     const json = await res.json();
     if (json.success) {
-      showToast(`Equipment for ${reqId} returned! Equipment status reset to Available.`, 'success');
+      showToast(json.message, 'success');
       refreshAllData();
     }
   } catch (err) {
-    showToast('Failed to process return', 'error');
+    showToast('Failed to complete maintenance', 'error');
   }
+}
+
+function setupRegisterForm() {
+  const form = document.getElementById('registerForm');
+  if (!form) return;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+      name: document.getElementById('regName').value,
+      email: document.getElementById('regEmail').value,
+      register_number: document.getElementById('regNum').value,
+      department: document.getElementById('regDept').value,
+      year: parseInt(document.getElementById('regYear').value),
+      semester: parseInt(document.getElementById('regSem').value),
+      phone: document.getElementById('regPhone').value
+    };
+
+    try {
+      const res = await fetch(`${API_BASE}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const json = await res.json();
+      if (json.success) {
+        closeModal('registerModal');
+        showToast(json.message, 'success');
+        form.reset();
+        refreshAllData();
+      } else {
+        showToast(json.error || 'Registration failed', 'error');
+      }
+    } catch (err) {
+      showToast('Registration error', 'error');
+    }
+  });
 }
 
 function setupAddEquipmentForm() {
   const btnOpen = document.getElementById('btnOpenAddModal');
   if (btnOpen) {
     btnOpen.addEventListener('click', () => {
-      if (currentRole !== 'admin') {
-        showToast('BR-07: Switch role to Admin to add equipment.', 'error');
+      if (PROFILES[currentRole].role !== 'ADMIN') {
+        showToast('BR-09: Switch role to Admin to register equipment.', 'error');
         return;
       }
       openModal('addEqModal');
@@ -542,7 +717,7 @@ function setupAddEquipmentForm() {
 
       const payload = {
         name: document.getElementById('addName').value,
-        category: document.getElementById('addCategory').value,
+        category_id: parseInt(document.getElementById('addCategory').value),
         locker_id: document.getElementById('addLocker').value,
         specifications: document.getElementById('addSpecs').value,
         location: document.getElementById('addLocation').value,
@@ -562,7 +737,7 @@ function setupAddEquipmentForm() {
           form.reset();
           refreshAllData();
         } else {
-          showToast(json.error || 'Failed to add equipment', 'error');
+          showToast(json.error || 'Failed to register equipment', 'error');
         }
       } catch (err) {
         showToast('Failed to add equipment', 'error');
@@ -588,7 +763,7 @@ function setupLockerKiosk() {
   const btnRfid = document.getElementById('btnSimulateRfid');
   if (btnRfid) {
     btnRfid.addEventListener('click', () => {
-      triggerLockerUnlock({ user_id: USERS[currentRole].id });
+      triggerLockerUnlock({ user_id: PROFILES[currentRole].id });
     });
   }
 }

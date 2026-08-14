@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart Campus Equipment Borrowing System</title>
+  <title>SmartCampus EquipBorrow - College Equipment Management</title>
   <link rel="stylesheet" href="styles.css">
   <!-- Lucide Icons Library -->
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -13,7 +13,7 @@
   <!-- Navigation Bar -->
   <header class="navbar">
     <div class="brand">
-      <i data-lucide="cpu"></i>
+      <i data-lucide="graduation-cap" style="color: #60a5fa; width: 28px; height: 28px;"></i>
       <span>SmartCampus <span style="color:#60a5fa; font-weight: 300;">EquipBorrow</span></span>
     </div>
 
@@ -21,32 +21,38 @@
       <button class="nav-tab active" data-tab="catalog">
         <i data-lucide="grid"></i> Catalog
       </button>
-      <button class="nav-tab" data-tab="locker-kiosk">
-        <i data-lucide="shield-check"></i> IoT Locker Kiosk
-      </button>
       <button class="nav-tab" data-tab="my-loans">
-        <i data-lucide="qr-code"></i> My Requests & Pass
+        <i data-lucide="qr-code"></i> My Requests & Loans
+      </button>
+      <button class="nav-tab" data-tab="locker-kiosk">
+        <i data-lucide="shield-check"></i> IoT Kiosk
       </button>
       <button class="nav-tab" data-tab="admin-dashboard" id="adminNavTab">
         <i data-lucide="bar-chart-3"></i> Admin Portal
       </button>
     </nav>
 
-    <!-- Role Switcher & User Profile -->
+    <!-- Role & Student Profile Switcher -->
     <div style="display: flex; align-items: center; gap: 1rem;">
+      <button class="btn btn-secondary" onclick="openModal('registerModal')" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+        <i data-lucide="user-plus"></i> Student Register
+      </button>
+
       <div class="role-switcher">
-        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">ACTIVE ROLE:</span>
-        <select id="roleSelector" style="background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border-color); color: var(--accent-cyan); font-weight: 700; padding: 0.4rem 0.8rem; border-radius: 10px; cursor: pointer;">
-          <option value="student">👨‍🎓 Student (Alex Rivera)</option>
-          <option value="admin">🛠️ Lab Admin (Dr. Sarah Vance)</option>
+        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">ROLE:</span>
+        <select id="roleSelector" style="background: rgba(15, 23, 42, 0.85); border: 1px solid var(--border-color); color: var(--accent-cyan); font-weight: 700; padding: 0.4rem 0.8rem; border-radius: 10px; cursor: pointer;">
+          <option value="jeeva">🎓 Jeeva Kumar (CSE 4th Yr)</option>
+          <option value="alex">🎓 Alex Rivera (ECE 4th Yr)</option>
+          <option value="jordan">🎓 Jordan Smith (Robotics 3rd Yr)</option>
+          <option value="admin">🛠️ Lab Admin (Dr. Vance)</option>
         </select>
       </div>
 
       <div class="user-badge" id="userBadgeDisplay">
-        <div class="user-avatar" id="userAvatarText">AR</div>
+        <div class="user-avatar" id="userAvatarText">JK</div>
         <div>
-          <div style="font-weight: 600;" id="userNameText">Alex Rivera</div>
-          <div style="font-size: 0.75rem; color: var(--text-muted);" id="userRoleSubtext">STU-88210 | Max 2 Borrows</div>
+          <div style="font-weight: 600;" id="userNameText">Jeeva Kumar</div>
+          <div style="font-size: 0.72rem; color: var(--text-muted);" id="userRoleSubtext">RA2311003050340 | CSE</div>
         </div>
       </div>
     </div>
@@ -54,7 +60,7 @@
 
   <main class="container">
 
-    <!-- Top Metrics Overview -->
+    <!-- 6-Card Dashboard Metrics Overview -->
     <div class="metrics-grid">
       <div class="metric-card">
         <div class="metric-icon blue"><i data-lucide="box"></i></div>
@@ -81,7 +87,7 @@
       </div>
 
       <div class="metric-card">
-        <div class="metric-icon amber"><i data-lucide="alert-circle"></i></div>
+        <div class="metric-icon amber"><i data-lucide="hourglass"></i></div>
         <div class="metric-data">
           <h3 id="metricPending">--</h3>
           <p>Pending Approvals</p>
@@ -95,6 +101,15 @@
           <p>In Maintenance</p>
         </div>
       </div>
+
+      <!-- NEW CARD: Overdue -->
+      <div class="metric-card">
+        <div class="metric-icon danger" style="background: rgba(239, 68, 68, 0.2); color: #f87171;"><i data-lucide="alert-triangle"></i></div>
+        <div class="metric-data">
+          <h3 id="metricOverdue" style="color: #f87171;">--</h3>
+          <p>Overdue Gear</p>
+        </div>
+      </div>
     </div>
 
     <!-- TAB 1: EQUIPMENT CATALOG -->
@@ -102,7 +117,7 @@
       <div class="filter-bar">
         <div class="search-box">
           <i data-lucide="search"></i>
-          <input type="text" id="searchInput" placeholder="Search equipment name, specs, lab location, SN...">
+          <input type="text" id="searchInput" placeholder="Search equipment, ESP32, serial number, lab location...">
         </div>
 
         <div class="category-chips" id="categoryChips">
@@ -110,8 +125,8 @@
           <button class="chip" data-cat="Computing & Laptops">Computing</button>
           <button class="chip" data-cat="AV & Cinema">AV & Cinema</button>
           <button class="chip" data-cat="VR & AR">VR & AR</button>
-          <button class="chip" data-cat="Robotics & Drones">Robotics</button>
-          <button class="chip" data-cat="IoT & Electronics">IoT & Hardware</button>
+          <button class="chip" data-cat="Robotics">Robotics</button>
+          <button class="chip" data-cat="IoT & Hardware">IoT & Hardware</button>
           <button class="chip" data-cat="Lab Tools">Lab Tools</button>
         </div>
       </div>
@@ -121,80 +136,15 @@
       </div>
     </section>
 
-    <!-- TAB 2: IOT LOCKER KIOSK SIMULATOR -->
-    <section id="lockerKioskPanel" class="tab-panel">
-      <div class="locker-section">
-        
-        <div class="locker-kiosk-panel">
-          <div>
-            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-              <i data-lucide="aperture" style="color: #60a5fa;"></i> IoT Kiosk Terminal
-            </h3>
-            <p style="color: var(--text-muted); font-size: 0.85rem;">
-              Scan dynamic QR token or tap Student ID card to actuate physical locker lock solenoid.
-            </p>
-          </div>
-
-          <div class="scanner-sim">
-            <div class="scanner-laser"></div>
-            <i data-lucide="qr-code" style="width: 64px; height: 64px; color: #60a5fa; margin-bottom: 0.5rem;"></i>
-            <p style="font-size: 0.85rem; color: var(--text-muted);">Optical QR Scanner Ready</p>
-          </div>
-
-          <div class="form-group">
-            <label>Manual QR Pass Token Input</label>
-            <input type="text" id="kioskQrInput" placeholder="e.g. QR-REQ-10492-STU-88210">
-          </div>
-
-          <button class="btn btn-primary" id="btnScanQr">
-            <i data-lucide="scan"></i> Scan Pass & Unlock Locker
-          </button>
-
-          <div style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">Simulate NFC / RFID ID Card Tap:</p>
-            <div class="rfid-tap-area" id="btnSimulateRfid">
-              <div style="display: flex; align-items: center; gap: 0.75rem;">
-                <i data-lucide="contactless-payment" style="color: #3b82f6; width: 24px; height: 24px;"></i>
-                <div>
-                  <div style="font-weight: 600; font-size: 0.9rem;" id="rfidBadgeName">Tap Alex Rivera's ID</div>
-                  <div style="font-size: 0.75rem; color: var(--text-muted);" id="rfidBadgeId">RFID ID: STU-88210</div>
-                </div>
-              </div>
-              <span class="status-badge Available" style="font-size: 0.7rem;">READY</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="lockers-grid-container">
-          <div class="lockers-bank-title">
-            <div>
-              <h3 style="font-size: 1.25rem; font-weight: 700;">Smart Locker Bay - CS Innovation Quad</h3>
-              <p style="color: var(--text-muted); font-size: 0.85rem;">Live lock actuator & sensor telemetry</p>
-            </div>
-            <div style="display: flex; gap: 1rem; font-size: 0.8rem;">
-              <span style="display: flex; align-items: center; gap: 0.3rem;"><span class="locker-led" style="background:#10b981;"></span> Unlocked</span>
-              <span style="display: flex; align-items: center; gap: 0.3rem;"><span class="locker-led" style="background:#f59e0b;"></span> Reserved</span>
-              <span style="display: flex; align-items: center; gap: 0.3rem;"><span class="locker-led" style="background:#64748b;"></span> Locked</span>
-            </div>
-          </div>
-
-          <div class="lockers-grid" id="lockersGrid">
-            <!-- Dynamic Locker Doors -->
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- TAB 3: MY REQUESTS & PASS -->
+    <!-- TAB 2: MY REQUESTS & LOANS -->
     <section id="myLoansPanel" class="tab-panel">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
         <div>
-          <h2 style="font-size: 1.5rem; font-weight: 700;">My Equipment Borrowing Requests</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">View request history, active borrowings, and digital pickup QR passes.</p>
+          <h2 style="font-size: 1.5rem; font-weight: 700;">My Borrowing Requests & Active Loans</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Track equipment status, digital pickup passes, and expected return dates.</p>
         </div>
         <div style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); padding: 0.5rem 1rem; border-radius: 12px; font-size: 0.85rem; color: #60a5fa;">
-          Active Limit: <strong id="activeLimitDisplay">0 / 2 Max (BR-05)</strong>
+          Borrowing Limit: <strong id="activeLimitDisplay">0 / 2 Max (BR-06)</strong>
         </div>
       </div>
 
@@ -202,13 +152,13 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>Request ID</th>
-              <th>Equipment</th>
+              <th>Req ID</th>
+              <th>Equipment Unit</th>
               <th>Locker Slot</th>
               <th>Borrow & Return Dates</th>
-              <th>Purpose</th>
+              <th>Project Purpose</th>
               <th>Status</th>
-              <th>Actions</th>
+              <th>Digital Pass & Action</th>
             </tr>
           </thead>
           <tbody id="myLoansTableBody">
@@ -218,23 +168,88 @@
       </div>
     </section>
 
-    <!-- TAB 4: ADMIN PORTAL & ANALYTICS -->
+    <!-- TAB 3: IOT LOCKER KIOSK SIMULATOR -->
+    <section id="lockerKioskPanel" class="tab-panel">
+      <div class="locker-section">
+        
+        <div class="locker-kiosk-panel">
+          <div>
+            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+              <i data-lucide="aperture" style="color: #60a5fa;"></i> IoT Kiosk Terminal
+            </h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem;">
+              Scan dynamic QR token or tap Student ID card to unlock physical locker bay.
+            </p>
+          </div>
+
+          <div class="scanner-sim">
+            <div class="scanner-laser"></div>
+            <i data-lucide="qr-code" style="width: 64px; height: 64px; color: #60a5fa; margin-bottom: 0.5rem;"></i>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Optical QR Pass Scanner Active</p>
+          </div>
+
+          <div class="form-group">
+            <label>Manual QR Pass Token Input</label>
+            <input type="text" id="kioskQrInput" placeholder="e.g. QR-REQ-10492-STU-88210">
+          </div>
+
+          <button class="btn btn-primary" id="btnScanQr">
+            <i data-lucide="scan"></i> Scan Pass & Actuate Lock
+          </button>
+
+          <div style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">Simulate NFC / RFID Student ID Tap:</p>
+            <div class="rfid-tap-area" id="btnSimulateRfid">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <i data-lucide="contactless-payment" style="color: #3b82f6; width: 24px; height: 24px;"></i>
+                <div>
+                  <div style="font-weight: 600; font-size: 0.9rem;" id="rfidBadgeName">Tap Student ID Card</div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);" id="rfidBadgeId">RFID: STU-10034</div>
+                </div>
+              </div>
+              <span class="status-badge AVAILABLE" style="font-size: 0.7rem;">READY</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="lockers-grid-container">
+          <div class="lockers-bank-title">
+            <div>
+              <h3 style="font-size: 1.25rem; font-weight: 700;">Smart Locker Bay - CS Innovation Quad</h3>
+              <p style="color: var(--text-muted); font-size: 0.85rem;">Solenoid lock status & telemetry</p>
+            </div>
+            <div style="display: flex; gap: 1rem; font-size: 0.8rem;">
+              <span style="display: flex; align-items: center; gap: 0.3rem;"><span class="locker-led" style="background:#10b981;"></span> Unlocked</span>
+              <span style="display: flex; align-items: center; gap: 0.3rem;"><span class="locker-led" style="background:#f59e0b;"></span> Reserved</span>
+              <span style="display: flex; align-items: center; gap: 0.3rem;"><span class="locker-led" style="background:#64748b;"></span> Locked</span>
+            </div>
+          </div>
+
+          <div class="lockers-grid" id="lockersGrid">
+            <!-- Dynamic Lockers -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TAB 4: ADMIN PORTAL & MAINTENANCE -->
     <section id="adminDashboardPanel" class="tab-panel">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
         <div>
-          <h2 style="font-size: 1.5rem; font-weight: 700;">Lab Manager Portal & System Analytics</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">Review pending requests (BR-07), manage inventory, and inspect audit logs.</p>
+          <h2 style="font-size: 1.5rem; font-weight: 700;">Lab Manager Portal & Maintenance Pipeline</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Review pending student requests (BR-16/17), process returns with condition checks (BR-19), and manage maintenance tickets.</p>
         </div>
         <button class="btn btn-primary" id="btnOpenAddModal" style="width: auto;">
-          <i data-lucide="plus"></i> Add New Equipment
+          <i data-lucide="plus"></i> Register Equipment
         </button>
       </div>
 
-      <!-- Pending Approvals Section -->
+      <!-- Pending Approvals Queue -->
       <div class="data-table-container" style="margin-bottom: 2rem;">
         <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
           <h3 style="font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
-            <i data-lucide="shield-alert" style="color: #f59e0b;"></i> Pending Borrow Requests (Admin Approval Required)
+            <i data-lucide="shield-alert" style="color: #f59e0b;"></i> Pending Borrow Requests (Admin Review Required)
           </h3>
         </div>
         <table class="data-table">
@@ -242,23 +257,74 @@
             <tr>
               <th>Req ID</th>
               <th>Student</th>
-              <th>Equipment</th>
-              <th>Duration</th>
-              <th>Purpose</th>
-              <th>Action (BR-07)</th>
+              <th>Department / Reg No</th>
+              <th>Equipment Unit</th>
+              <th>Requested Dates</th>
+              <th>Project Purpose</th>
+              <th>Actions (BR-16/17)</th>
             </tr>
           </thead>
           <tbody id="pendingTableBody">
-            <!-- Dynamic Pending Rows -->
+            <!-- Pending Rows -->
           </tbody>
         </table>
       </div>
 
-      <!-- Audit Log Stream -->
+      <!-- Active Loans & Return Processing Queue -->
+      <div class="data-table-container" style="margin-bottom: 2rem;">
+        <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color);">
+          <h3 style="font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+            <i data-lucide="repeat" style="color: #60a5fa;"></i> Active Loans & Return Processing Counter (BR-19)
+          </h3>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Loan ID</th>
+              <th>Student</th>
+              <th>Equipment</th>
+              <th>Issued At</th>
+              <th>Due Date</th>
+              <th>Status</th>
+              <th>Process Return</th>
+            </tr>
+          </thead>
+          <tbody id="adminLoansTableBody">
+            <!-- Active Loans Rows -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Maintenance Pipeline Section -->
+      <div class="data-table-container" style="margin-bottom: 2rem;">
+        <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color);">
+          <h3 style="font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+            <i data-lucide="wrench" style="color: #f87171;"></i> Damaged Equipment & Maintenance Pipeline (BR-14)
+          </h3>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Maint ID</th>
+              <th>Equipment</th>
+              <th>Serial Number</th>
+              <th>Reported Issue</th>
+              <th>Reported Date</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="maintenanceTableBody">
+            <!-- Maintenance Rows -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Security Audit Stream -->
       <div class="data-table-container">
         <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color);">
           <h3 style="font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
-            <i data-lucide="history" style="color: #60a5fa;"></i> Real-Time Audit & Security Logs
+            <i data-lucide="history" style="color: #a78bfa;"></i> System Audit & Security Trail (BR-20)
           </h3>
         </div>
         <table class="data-table">
@@ -280,7 +346,7 @@
 
   </main>
 
-  <!-- MODAL 1: RESERVE EQUIPMENT -->
+  <!-- MODAL 1: BORROW REQUEST FORM -->
   <div class="modal-overlay" id="reserveModal">
     <div class="modal-content">
       <div class="modal-header">
@@ -291,7 +357,7 @@
         <input type="hidden" id="reserveEqId">
         
         <div class="form-group" style="margin-bottom: 1rem;">
-          <label>Selected Equipment</label>
+          <label>Selected Equipment Unit</label>
           <input type="text" id="reserveEqName" readonly style="background: rgba(255,255,255,0.05); font-weight: 700;">
         </div>
 
@@ -302,23 +368,23 @@
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
           <div class="form-group">
-            <label>Borrow Date & Time (BR-02)</label>
+            <label>Borrow Date & Time (BR-04)</label>
             <input type="datetime-local" id="reserveStartDate" required>
           </div>
           <div class="form-group">
-            <label>Expected Return Date & Time (BR-03)</label>
+            <label>Expected Return Date & Time (BR-05)</label>
             <input type="datetime-local" id="reserveEndDate" required>
           </div>
         </div>
 
         <div class="form-group" style="margin-bottom: 1rem;">
           <label>Borrow Purpose & Project Details (Required)</label>
-          <textarea id="reservePurpose" rows="2" placeholder="e.g. Senior Capstone Demo Project for Autonomous Robotics" required></textarea>
+          <textarea id="reservePurpose" rows="2" placeholder="e.g. Final Year IoT Project for CSE Capstone Demo" required></textarea>
         </div>
 
         <div class="form-group" style="margin-bottom: 1.5rem;">
-          <label>Student Email Notification</label>
-          <input type="email" id="reserveStudentEmail" value="arivera@campus.edu" required>
+          <label>Student Email</label>
+          <input type="email" id="reserveStudentEmail" readonly style="background: rgba(255,255,255,0.05);">
         </div>
 
         <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
@@ -329,16 +395,124 @@
     </div>
   </div>
 
-  <!-- MODAL 2: DIGITAL PASS & QR CODE -->
+  <!-- MODAL 2: PROCESS RETURN WITH CONDITION (ADMIN) -->
+  <div class="modal-overlay" id="returnModal">
+    <div class="modal-content" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3>Process Equipment Return (BR-19)</h3>
+        <button class="modal-close" onclick="closeModal('returnModal')">&times;</button>
+      </div>
+      <form id="returnForm">
+        <input type="hidden" id="returnLoanId">
+        
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label>Returned Condition Assessment (BR-14 / BR-15)</label>
+          <select id="returnCondition" required style="background: rgba(15,23,42,0.9); color: white;">
+            <option value="EXCELLENT">🟢 EXCELLENT (Perfect Working Order)</option>
+            <option value="GOOD" selected>🟢 GOOD (Normal Wear & Tear)</option>
+            <option value="MINOR_DAMAGE">🔴 MINOR DAMAGE (Scratches / Cracked Casing)</option>
+            <option value="MAJOR_DAMAGE">🔴 MAJOR DAMAGE (Component Failure / Faulty Motor)</option>
+            <option value="MISSING_PARTS">🔴 MISSING PARTS (Cable / Adapter Missing)</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label>Missing Accessories (if any)</label>
+          <input type="text" id="returnMissing" placeholder="e.g. USB-C Cable missing">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label>Damage / Technical Description</label>
+          <textarea id="returnDamageDesc" rows="2" placeholder="e.g. Right wheel motor slipping"></textarea>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('returnModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary" style="width: auto;">Confirm Return</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 3: STUDENT REGISTRATION -->
+  <div class="modal-overlay" id="registerModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Student College Registration</h3>
+        <button class="modal-close" onclick="closeModal('registerModal')">&times;</button>
+      </div>
+      <form id="registerForm">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="regName" placeholder="e.g. Jeeva Kumar" required>
+          </div>
+          <div class="form-group">
+            <label>College Email</label>
+            <input type="email" id="regEmail" placeholder="jeeva@college.edu" required>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div class="form-group">
+            <label>Register Number</label>
+            <input type="text" id="regNum" placeholder="RA2311003050340" required>
+          </div>
+          <div class="form-group">
+            <label>Department</label>
+            <select id="regDept" required>
+              <option value="CSE">Computer Science & Engg (CSE)</option>
+              <option value="ECE">Electronics & Comm Engg (ECE)</option>
+              <option value="Robotics Engineering">Robotics Engineering</option>
+              <option value="Mechanical Engg">Mechanical Engg</option>
+              <option value="Biotech">Biotechnology</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+          <div class="form-group">
+            <label>Year</label>
+            <select id="regYear" required>
+              <option value="1">1st Year</option>
+              <option value="2">2nd Year</option>
+              <option value="3">3rd Year</option>
+              <option value="4" selected>4th Year</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Semester</label>
+            <select id="regSem" required>
+              <option value="1">1st Sem</option>
+              <option value="3">3rd Sem</option>
+              <option value="5">5th Sem</option>
+              <option value="7" selected>7th Sem</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Section & Phone</label>
+            <input type="text" id="regPhone" placeholder="+91 9876543210" required>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('registerModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary" style="width: auto;">Complete Registration</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 4: DIGITAL PASS & QR -->
   <div class="modal-overlay" id="passModal">
     <div class="modal-content" style="max-width: 440px;">
       <div class="modal-header">
-        <h3>Digital Pickup Pass</h3>
+        <h3>Digital Borrowing Pass</h3>
         <button class="modal-close" onclick="closeModal('passModal')">&times;</button>
       </div>
       
       <div class="pass-card">
-        <div style="font-size: 0.75rem; color: #60a5fa; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Smart Campus Access Token</div>
+        <div style="font-size: 0.75rem; color: #60a5fa; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">SmartCampus Access Token</div>
         <h4 id="passEquipmentName" style="font-size: 1.2rem; font-weight: 700; margin: 0.5rem 0;">--</h4>
         <p id="passLockerId" style="color: #34d399; font-weight: 600; font-size: 0.9rem;">Locker Slot: --</p>
         
@@ -347,7 +521,7 @@
         </div>
 
         <div style="font-size: 0.8rem; color: var(--text-muted);" id="passTokenCode">TOKEN: --</div>
-        <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.5rem;">Scan this QR code at the IoT Kiosk or show to Lab Desk.</div>
+        <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.5rem;">Show at Lab Counter or Scan at IoT Locker Kiosk.</div>
       </div>
 
       <div style="margin-top: 1.5rem; text-align: center;">
@@ -356,18 +530,18 @@
     </div>
   </div>
 
-  <!-- MODAL 3: REJECT REQUEST (ADMIN) -->
+  <!-- MODAL 5: REJECT REQUEST (ADMIN) -->
   <div class="modal-overlay" id="rejectModal">
     <div class="modal-content" style="max-width: 460px;">
       <div class="modal-header">
-        <h3>Reject Borrow Request</h3>
+        <h3>Reject Borrow Request (BR-18)</h3>
         <button class="modal-close" onclick="closeModal('rejectModal')">&times;</button>
       </div>
       <form id="rejectForm">
         <input type="hidden" id="rejectReqId">
         <div class="form-group" style="margin-bottom: 1.25rem;">
-          <label>Reason for Rejection (Required)</label>
-          <textarea id="rejectReasonInput" rows="3" placeholder="e.g. Equipment scheduled for maintenance calibration on requested dates." required></textarea>
+          <label>Mandatory Reason for Rejection (BR-18)</label>
+          <textarea id="rejectReasonInput" rows="3" placeholder="e.g. Equipment scheduled for maintenance calibration during requested period." required></textarea>
         </div>
         <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
           <button type="button" class="btn btn-secondary" onclick="closeModal('rejectModal')">Cancel</button>
@@ -377,46 +551,46 @@
     </div>
   </div>
 
-  <!-- MODAL 4: ADD NEW EQUIPMENT (ADMIN) -->
+  <!-- MODAL 6: REGISTER EQUIPMENT (ADMIN) -->
   <div class="modal-overlay" id="addEqModal">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Add New Campus Equipment</h3>
+        <h3>Register New College Equipment</h3>
         <button class="modal-close" onclick="closeModal('addEqModal')">&times;</button>
       </div>
       <form id="addEqForm">
         <div class="form-group" style="margin-bottom: 1rem;">
           <label>Item Name</label>
-          <input type="text" id="addName" placeholder="e.g. Sony FX6 Cinema Camera" required>
+          <input type="text" id="addName" placeholder="e.g. ESP32 IoT Starter Bundle" required>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
           <div class="form-group">
             <label>Category</label>
             <select id="addCategory" required>
-              <option value="Computing & Laptops">Computing & Laptops</option>
-              <option value="AV & Cinema">AV & Cinema</option>
-              <option value="VR & AR">VR & AR</option>
-              <option value="Robotics & Drones">Robotics & Drones</option>
-              <option value="IoT & Electronics">IoT & Electronics</option>
-              <option value="Lab Tools">Lab Tools</option>
+              <option value="1">Computing & Laptops</option>
+              <option value="2">AV & Cinema</option>
+              <option value="3">VR & AR</option>
+              <option value="4">Robotics</option>
+              <option value="5" selected>IoT & Hardware</option>
+              <option value="6">Lab Tools</option>
             </select>
           </div>
           <div class="form-group">
             <label>Assign Locker Slot</label>
-            <input type="text" id="addLocker" placeholder="e.g. B-05" required>
+            <input type="text" id="addLocker" placeholder="e.g. A-05" required>
           </div>
         </div>
 
         <div class="form-group" style="margin-bottom: 1rem;">
           <label>Specifications & Included Accessories</label>
-          <textarea id="addSpecs" rows="2" placeholder="e.g. Full frame 4K, XLR handle, 2x 160GB Tough CFexpress cards"></textarea>
+          <textarea id="addSpecs" rows="2" placeholder="e.g. ESP32 NodeMCU, OLED Display, DHT11 Sensor, Relay Module"></textarea>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
           <div class="form-group">
             <label>Lab Location</label>
-            <input type="text" id="addLocation" placeholder="e.g. Media Studio A" required>
+            <input type="text" id="addLocation" placeholder="e.g. IoT Hardware Lab 102" required>
           </div>
           <div class="form-group" style="justify-content: center;">
             <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-top: 1.5rem;">
