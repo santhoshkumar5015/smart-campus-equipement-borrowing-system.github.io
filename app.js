@@ -380,11 +380,11 @@ function handleLocalApi(url, options) {
     if (borrowDt < new Date(now.getTime() - 15 * 60000)) return { error: 'BR-04: Borrow date cannot be in the past.' };
     if (returnDt <= borrowDt) return { error: 'BR-05: Expected return date must be strictly after borrow date.' };
 
-    // BR-06: 2 active loans limit check
+    // BR-06: 5 active loans limit check
     const userActiveLoans = db.loans.filter(l => l.student_id === profile.id && l.status === 'ACTIVE').length;
     const userActiveReqs = db.borrow_requests.filter(r => r.student_id === profile.id && ['PENDING', 'APPROVED'].includes(r.status)).length;
-    if ((userActiveLoans + userActiveReqs) >= 2) {
-      return { error: 'BR-06: Borrowing limit reached. Maximum allowed active borrowings is 2.' };
+    if ((userActiveLoans + userActiveReqs) >= 5) {
+      return { error: 'BR-06: Borrowing limit reached. Maximum allowed active borrowings is 5.' };
     }
 
     const reqId = `REQ-${Math.floor(10000 + Math.random() * 90000)}`;
@@ -445,7 +445,7 @@ function handleLocalApi(url, options) {
       const borrowDt = new Date(body.borrow_date);
       const returnDt = new Date(body.expected_return_date);
       if (returnDt <= borrowDt) return { error: 'BR-05: Expected return date must be strictly after borrow date.' };
-      if ((returnDt - borrowDt) / (1000 * 60 * 60 * 24) > 30) return { error: 'BR-05: Loan duration cannot exceed 1 month (30 days).' };
+      if ((returnDt - borrowDt) / (1000 * 60 * 60 * 24) > 90) return { error: 'BR-05: Loan duration cannot exceed 3 months (90 days).' };
 
       req.borrow_date = body.borrow_date;
       req.expected_return_date = body.expected_return_date;

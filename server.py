@@ -22,7 +22,7 @@ except Exception:
     DB_PATH = "/tmp/smart_campus.db"
 
 DEFAULT_PORTS = [8080, 8000, 5000, 8888, 3000]
-MAX_ACTIVE_LOANS = 2  # BR-06
+MAX_ACTIVE_LOANS = 5  # BR-06 (Extended borrowing limit)
 
 
 def get_db():
@@ -567,9 +567,9 @@ class SmartCampusRequestHandler(BaseHTTPRequestHandler):
                 self.send_json_response({"error": "BR-05: Expected return date must be strictly after borrow date."}, 400)
                 return
 
-            if (return_dt - borrow_dt).days > 30:
+            if (return_dt - borrow_dt).days > 90:
                 conn.close()
-                self.send_json_response({"error": "BR-05: Loan duration cannot exceed 1 month (30 days)."}, 400)
+                self.send_json_response({"error": "BR-05: Loan duration cannot exceed 3 months (90 days)."}, 400)
                 return
 
             # BR-07: Overdue student check
@@ -914,9 +914,9 @@ class SmartCampusRequestHandler(BaseHTTPRequestHandler):
                 self.send_json_response({"error": "BR-05: Expected return date must be strictly after borrow date."}, 400)
                 return
 
-            if (return_dt - borrow_dt).days > 30:
+            if (return_dt - borrow_dt).days > 90:
                 conn.close()
-                self.send_json_response({"error": "BR-05: Loan duration cannot exceed 1 month (30 days)."}, 400)
+                self.send_json_response({"error": "BR-05: Loan duration cannot exceed 3 months (90 days)."}, 400)
                 return
 
             cursor.execute("UPDATE borrow_requests SET borrow_date = ?, expected_return_date = ?, updated_at = ? WHERE id = ?", (borrow_str.replace("T", " "), return_str.replace("T", " "), now_str, req_id))

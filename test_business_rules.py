@@ -137,7 +137,7 @@ class TestBusinessRules(unittest.TestCase):
         self.assertIn("BR-05", resp.get("error", ""))
 
     def test_br06_max_two_active_loans_limit(self):
-        """BR-06: Student can have a maximum of 2 active loans/requests."""
+        """BR-06: Student can have a maximum of 5 active loans/requests."""
         now = datetime.datetime.now()
         t1 = (now + datetime.timedelta(days=10)).strftime("%Y-%m-%d %H:%M")
         t2 = (now + datetime.timedelta(days=12)).strftime("%Y-%m-%d %H:%M")
@@ -149,21 +149,19 @@ class TestBusinessRules(unittest.TestCase):
         conn.commit()
         conn.close()
 
-        # Item 1
-        call_api("POST", "/api/borrow-requests", headers={"X-User-Role": "STUDENT"}, body={
-            "equipment_id": 1, "user_id": test_user, "borrow_date": t1, "expected_return_date": t2, "purpose": "Item 1"
-        })
-        # Item 2
-        call_api("POST", "/api/borrow-requests", headers={"X-User-Role": "STUDENT"}, body={
-            "equipment_id": 2, "user_id": test_user, "borrow_date": t1, "expected_return_date": t2, "purpose": "Item 2"
-        })
-        # Item 3 (Should fail)
-        code3, resp3 = call_api("POST", "/api/borrow-requests", headers={"X-User-Role": "STUDENT"}, body={
-            "equipment_id": 3, "user_id": test_user, "borrow_date": t1, "expected_return_date": t2, "purpose": "Item 3 (Should block)"
+        # Submit 5 items (limit is 5)
+        for eq_id in [1, 2, 4, 5, 6]:
+            call_api("POST", "/api/borrow-requests", headers={"X-User-Role": "STUDENT"}, body={
+                "equipment_id": eq_id, "user_id": test_user, "borrow_date": t1, "expected_return_date": t2, "purpose": f"Item {eq_id}"
+            })
+
+        # 6th item should fail with BR-06 limit error
+        code6, resp6 = call_api("POST", "/api/borrow-requests", headers={"X-User-Role": "STUDENT"}, body={
+            "equipment_id": 10, "user_id": test_user, "borrow_date": t1, "expected_return_date": t2, "purpose": "Item 6 (Should block)"
         })
 
-        self.assertEqual(code3, 400)
-        self.assertIn("BR-06", resp3.get("error", ""))
+        self.assertEqual(code6, 400)
+        self.assertIn("BR-06", resp6.get("error", ""))
 
     def test_br07_overdue_student_restriction(self):
         """BR-07: Student with overdue equipment cannot submit new requests."""
